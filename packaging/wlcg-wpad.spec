@@ -32,6 +32,7 @@ mkdir -p $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 install -p -m 444 pyweb/* $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 
 %post
+cvmfs_server update-geodb
 /sbin/service httpd status >/dev/null && /sbin/service httpd reload
 :
 
@@ -42,6 +43,7 @@ install -p -m 444 pyweb/* $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 /etc/httpd/conf.d/*
 /var/www/wsgi-scripts/*
 /usr/share/wlcg-wpad
+
 
 %changelog
 * Wed Apr 22 2016 Dave Dykstra <dwd@fnal.gov> - 0.1-1
