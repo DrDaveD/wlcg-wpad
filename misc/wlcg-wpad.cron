@@ -1,0 +1,4 @@
+# The day of the week (fifth column) has to match $CVMFS_UPDATEGEO_DAY
+#    in /usr/bin/cvmfs_server
+# The hour of the day (second column) has to be >= $CVMFS_UPDATEGEO_HOUR
+5 10 * * 2 root OUT=/var/log/update-geodb.out; cvmfs_server update-geodb -l >$OUT 2>&1 || (cat $OUT; false)
