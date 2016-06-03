@@ -1,0 +1,2 @@
+#!/bin/bash
+rsync -aCLv --delete wlcg-squid-monitor.cern.ch::wpad-conf/ /var/lib/wlcg-wpad/
