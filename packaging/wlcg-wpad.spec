@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.3
+Version: 0.4
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -53,6 +53,10 @@ fi
 
 
 %changelog
+* Wed Aug 03 2016 Dave Dykstra <dwd@fnal.gov> - 0.4-1
+- Disable the entries that are marked "disabled"
+- When there's a match, print "// For sitename, ..." as a leading comment
+
 * Wed Aug 03 2016 Dave Dykstra <dwd@fnal.gov> - 0.3-1
 - Convert to reading from worker-proxies.json instead of grid-squids.json
 
