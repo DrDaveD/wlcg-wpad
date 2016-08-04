@@ -13,6 +13,7 @@ orgsquidsupdatetime = 0
 orgsquidsmodtime = 0
 orgsquids = {}
 squidorgs = {}
+orgdisabledmsgs = {}
 
 def updateorgsquids(host):
     try:
@@ -37,6 +38,9 @@ def updateorgsquids(host):
             continue
         squidorgs[squid] = org
         orgsquids[org] = [ squid + ':3128' ] # default
+        if 'disabled' in workerproxies[squid]:
+            orgdisabledmsgs[org] = workerproxies[squid]['disabled']
+            continue
         if 'proxies' not in workerproxies[squid]:
             continue
         proxydicts = workerproxies[squid]['proxies']
@@ -60,5 +64,8 @@ def get_proxies(host, remoteip):
     if org not in orgsquids:
 	logmsg(host, remoteip, 'no squid found for org ' + org)
 	return [], "no squid found matching the remote ip address"
+    if org in orgdisabledmsgs:
+	logmsg(host, remoteip, 'disabled: ' + orgdisabledmsgs[org])
+        return [], orgdisabledmsgs[org]
     logmsg(host, remoteip, 'squids for org "' + org + '" are ' + ';'.join(orgsquids[org]))
     return orgsquids[org], None
