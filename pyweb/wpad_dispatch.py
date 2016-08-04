@@ -79,10 +79,10 @@ def dispatch(environ, start_response):
     for proxy in proxies:
 	if proxystr != "":
 	    proxystr += "; "
-	proxystr += "PROXY http://" + proxy
+	proxystr += "PROXY http://" + str(proxy)
 	if proxy.find(':') == -1:
 	    proxystr += ":3128"
     body = 'function FindProxyForURL(url, host) {\n' + \
     	   '    return "' + proxystr + '"\n' + \
-	   '}'
+	   '}\n'
     return good_request(start_response, body)
