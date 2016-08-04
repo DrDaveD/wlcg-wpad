@@ -6,7 +6,7 @@ import GeoIP
 
 cachetime = 300  # 5 minutes
 
-gridsquidsfile = "/var/lib/wlcg-wpad/grid-squids.json"
+workerproxiesfile = "/var/lib/wlcg-wpad/worker-proxies.json"
 gi = GeoIP.open("/var/lib/wlcg-wpad/geo/GeoIPOrg.dat", GeoIP.GEOIP_STANDARD)
 
 orgsquidsupdatetime = 0
@@ -17,44 +17,35 @@ squidorgs = {}
 def updateorgsquids(host):
     try:
 	global orgsquidsmodtime
-	modtime = os.stat(gridsquidsfile).st_mtime
+	modtime = os.stat(workerproxiesfile).st_mtime
 	if modtime == orgsquidsmodtime:
 	    # no change
 	    return
 	orgsquidsmodtime = modtime
-	handle = open(gridsquidsfile, 'r')
+	handle = open(workerproxiesfile, 'r')
 	jsondata = handle.read()
 	handle.close()
-	gridsquids = anyjson.deserialize(jsondata)
+	workerproxies = anyjson.deserialize(jsondata)
     except Exception, e:
-	logmsg(host, '-',  'error reading ' + gridsquidsfile + ', using old: ' + str(e))
+	logmsg(host, '-',  'error reading ' + workerproxiesfile + ', using old: ' + str(e))
 	return
 
-    added = 0
-    for squid in gridsquids:
-	if squid not in squidorgs:
-	    org = gi.org_by_name(squid)
-	    if org is None:
-		logmsg(host, '-', 'no org for ' + squid + ', skipping')
-		continue
-	    added += 1
-	    squidorgs[squid] = org
-	    if org in orgsquids:
-		orgsquids[org].append(squid)
-	    else:
-		orgsquids[org] = [ squid ]
+    for squid in workerproxies:
+        org = gi.org_by_name(squid)
+        if org is None:
+            logmsg(host, '-', 'no org for ' + squid + ', skipping')
+            continue
+        squidorgs[squid] = org
+        orgsquids[org] = [ squid + ':3128' ] # default
+        if 'proxies' not in workerproxies[squid]:
+            continue
+        proxydicts = workerproxies[squid]['proxies']
+        for proxydict in proxydicts:
+            if 'default' in proxydict:
+                orgsquids[org] = proxydict['default']
+                break
 
-    deleted = 0
-    for squid in squidorgs:
-	if squid not in gridsquids:
-	    deleted += 1
-	    org = squidorgs[squid]
-	    del squidorgs[squid]
-	    del orgsquids[org][squid]
-	    if orgsquids[org] == []:
-		del orgsquids[org]
-
-    logmsg('-', '-', 'read ' + str(len(gridsquids)) + ' gridsquids, added ' + str(added) + ', deleted ' + str(deleted) + ', now have ' + str(len(squidorgs)) + ' squidorgs and ' + str(len(orgsquids)) + ' orgsquids')
+    logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies, ' + str(len(squidorgs)) + ' squidorgs and ' + str(len(orgsquids)) + ' orgsquids')
 
 def get_proxies(host, remoteip):
     global orgsquidsupdatetime
