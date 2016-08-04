@@ -60,7 +60,7 @@ def dispatch(environ, start_response):
     if host == 'wlcg-wpad.cern.ch':
 	proxies, errmsg = wlcg_wpad.get_proxies(host, remoteip)
 	if errmsg != None:
-	    return bad_request(start_response, host, remoteip, errmsg)
+	    return bad_request(start_response, host, remoteip, str(errmsg))
     else:
         gotone = False
         for hostproxy in hostproxies:
