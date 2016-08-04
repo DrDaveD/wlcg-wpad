@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.2
+Version: 0.3
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -53,6 +53,9 @@ fi
 
 
 %changelog
+* Wed Aug 03 2016 Dave Dykstra <dwd@fnal.gov> - 0.3-1
+- Convert to reading from worker-proxies.json instead of grid-squids.json
+
 * Fri Jun 03 2016 Dave Dykstra <dwd@fnal.gov> - 0.2-1
 - Add initial implementation of wlcg-wpad.cern.ch
 - Copy config files from wlcg-squid-monitor.cern.ch
