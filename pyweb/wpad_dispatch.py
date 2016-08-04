@@ -57,18 +57,19 @@ def dispatch(environ, start_response):
 	if 'ip' in parameters:
 	    # for testing
 	    remoteip = parameters['ip'][0]
+    msg = None
     if host == 'wlcg-wpad.cern.ch':
-	proxies, errmsg = wlcg_wpad.get_proxies(host, remoteip)
-	if errmsg != None:
-	    return bad_request(start_response, host, remoteip, str(errmsg))
+	proxies, msg = wlcg_wpad.get_proxies(host, remoteip)
+	if proxies == []:
+	    return bad_request(start_response, host, remoteip, str(msg))
     else:
         gotone = False
         for hostproxy in hostproxies:
             if host == hostproxy[0]:
                 gotone = True
-                proxies, errmsg = geosort.sort_proxies(remoteip, hostproxy[1])
-                if errmsg != None:
-                    return bad_request(start_response, host, remoteip, errmsg)
+                proxies, msg = geosort.sort_proxies(remoteip, hostproxy[1])
+                if proxies == []:
+                    return bad_request(start_response, host, remoteip, msg)
 		break
         if not gotone:
             return bad_request(start_response, host, remoteip, 'Unrecognized host name')
@@ -85,4 +86,6 @@ def dispatch(environ, start_response):
     body = 'function FindProxyForURL(url, host) {\n' + \
     	   '    return "' + proxystr + '"\n' + \
 	   '}\n'
+    if msg is not None:
+        body = '// ' + str(msg) + '\n' + body
     return good_request(start_response, body)
