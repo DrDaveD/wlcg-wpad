@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.4
+Version: 0.5
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -53,6 +53,11 @@ fi
 
 
 %changelog
+* Tue Sep 20 2016 Dave Dykstra <dwd@fnal.gov> - 0.5-1
+- Add support for client load balancing of proxies
+- If "cmsnames" is present in the data, add those to the first line comment
+  in the form "; CMS: sitename,..."
+
 * Wed Aug 03 2016 Dave Dykstra <dwd@fnal.gov> - 0.4-1
 - Disable the entries that are marked "disabled"
 - When there's a match, print "// For sitename, ..." as a leading comment
