@@ -44,12 +44,22 @@ def parse_geosort_conf():
 
 hostproxies = parse_geosort_conf()
 
+# return a proxy auto config statement that returns a list of proxies
+def getproxystr(proxies):
+    proxystr = ""
+    for proxy in proxies:
+        if proxystr != "":
+            proxystr += "; "
+        proxystr += "PROXY http://" + str(proxy)
+        if proxy.find(':') == -1:
+            proxystr += ":3128"
+    return 'return "' + proxystr + '";\n'
+
 def dispatch(environ, start_response):
     if 'SERVER_NAME' not in environ:
 	return bad_request(start_response, 'wpad-dispatch', '-', 'SERVER_NAME not set')
     if 'REMOTE_ADDR' not in environ:
 	return bad_request(start_response, 'wpad-dispatch', '-', 'REMOTE_ADDR not set')
-    proxies = []
     host = environ['SERVER_NAME']
     remoteip = environ['REMOTE_ADDR']
     if 'QUERY_STRING' in environ:
@@ -58,9 +68,12 @@ def dispatch(environ, start_response):
 	    # for testing
 	    remoteip = parameters['ip'][0]
     msg = None
+    wpadinfo = {}
     if host == 'wlcg-wpad.cern.ch':
-	proxies, msg = wlcg_wpad.get_proxies(host, remoteip)
-	if proxies == []:
+	wpadinfo = wlcg_wpad.get_proxies(host, remoteip)
+        if 'msg' in wpadinfo:
+            msg = wpadinfo['msg']
+	if 'proxies' not in wpadinfo:
 	    return bad_request(start_response, host, remoteip, str(msg))
     else:
         gotone = False
@@ -74,17 +87,32 @@ def dispatch(environ, start_response):
         if not gotone:
             return bad_request(start_response, host, remoteip, 'Unrecognized host name')
 	logmsg(host, remoteip, 'squids are ' + ';'.join(proxies))
+        wpadinfo['proxies'] = [{'default' : proxies}]
+
+    proxies = []
+    balance = False
+    for proxydict in wpadinfo['proxies']:
+        if 'default' in proxydict:
+            proxies = proxydict['default']
+            if 'loadbalance' in proxydict and proxydict['loadbalance'] == 'proxies':
+                balance = True
+            break
     if proxies == []:
 	return bad_request(start_response, host, remoteip, 'No proxy found for ' + remoteip)
     proxystr = ""
-    for proxy in proxies:
-	if proxystr != "":
-	    proxystr += "; "
-	proxystr += "PROXY http://" + str(proxy)
-	if proxy.find(':') == -1:
-	    proxystr += ":3128"
+    numproxies = len(proxies)
+    if balance and numproxies > 1:
+        # insert different orderings based on a random number
+        # leave the default ordering as the last case (without an if)
+        doubleproxies = proxies + proxies
+        proxystr = '    ran = Math.random();\n'
+        for i in range(1, numproxies):
+            cutoff = str(1.0 * i / numproxies)
+            proxystr += '    if (ran < ' + cutoff + ') '
+            proxystr += getproxystr(doubleproxies[i:i+numproxies])
+    proxystr += '    ' + getproxystr(proxies)
     body = 'function FindProxyForURL(url, host) {\n' + \
-    	   '    return "' + proxystr + '"\n' + \
+    	   proxystr + \
 	   '}\n'
     if msg is not None:
         body = '// ' + str(msg) + '\n' + body
