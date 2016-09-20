@@ -98,7 +98,11 @@ def dispatch(environ, start_response):
                 balance = True
             break
     if proxies == []:
-	return bad_request(start_response, host, remoteip, 'No proxy found for ' + remoteip)
+        if 'msg' in wpadinfo:
+            msg = str(wpadinfo['msg'])
+        else:
+            msg = 'No proxy found for ' + remoteip
+	return bad_request(start_response, host, remoteip, msg)
     proxystr = ""
     numproxies = len(proxies)
     if balance and numproxies > 1:
