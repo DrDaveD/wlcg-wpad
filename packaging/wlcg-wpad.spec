@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.5
+Version: 0.6
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -53,6 +53,10 @@ fi
 
 
 %changelog
+* Tue Sep 20 2016 Dave Dykstra <dwd@fnal.gov> - 0.6-1
+- Return specific error messages from wlcg_wpad module to the user
+  rather than a generic "No proxy found"
+
 * Tue Sep 20 2016 Dave Dykstra <dwd@fnal.gov> - 0.5-1
 - Add support for client load balancing of proxies
 - If "cmsnames" is present in the data, add those to the first line comment
