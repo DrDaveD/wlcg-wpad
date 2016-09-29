@@ -12,6 +12,7 @@ Requires: httpd
 Requires: mod_wsgi
 Requires: cvmfs-server
 Requires: python-anyjson
+Requires: python-netaddr
 
 %description
 Supplies Web Proxy Auto Discovery information for the Worldwide
