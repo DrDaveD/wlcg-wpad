@@ -1,6 +1,6 @@
 # Find proxies for WLCG grid site
 
-import sys, os, time, anyjson
+import sys, os, copy, time, anyjson, netaddr
 from wpad_utils import *
 import GeoIP
 
@@ -56,17 +56,31 @@ def get_proxies(host, remoteip):
     if org not in orgs:
 	logmsg(host, remoteip, 'no squid found for org ' + org)
 	return {'msg': 'no squid found matching the remote ip address'}
-    wpadinfo = orgs[org]
+    wpadinfo = copy.deepcopy(orgs[org])
     if 'disabled' in wpadinfo:
 	logmsg(host, remoteip, 'disabled: ' + wpadinfo['disabled'])
         wpadinfo['proxies'] = []
         wpadinfo['msg'] = wpadinfo['disabled']
         return wpadinfo
     proxies = []
+    remoteaddr = netaddr.IPAddress(remoteip)
+    idx = 0
     for proxydict in wpadinfo['proxies']:
+        if 'ipranges' in proxydict:
+            # delete the entry if the remoteaddr doesn't match
+            #  one of the ipranges
+            matchedone = False
+            for iprange in proxydict['ipranges']:
+                if remoteaddr in netaddr.IPNetwork(iprange):
+                    matchedone = True
+                    break
+            if not matchedone:
+                del wpadinfo['proxies'][idx]
+                continue
         if 'default' in proxydict:
             proxies = proxydict['default']
             break
+        idx += 1
     logmsg(host, remoteip, 'default squids for org "' + org + '" are ' + ';'.join(proxies))
     msg = ''
     if 'names' in wpadinfo:
