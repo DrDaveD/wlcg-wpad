@@ -31,7 +31,10 @@ def updateorgs(host):
 	return
 
     for squid in workerproxies:
-        org = gi.org_by_name(squid)
+        if 'ip' not in workerproxies[squid]:
+            logmsg(host, '-', 'no ip for ' + squid + ', skipping')
+            continue
+        org = gi.org_by_addr(workerproxies[squid]['ip'])
         if org is None:
             logmsg(host, '-', 'no org for ' + squid + ', skipping')
             continue
