@@ -68,7 +68,8 @@ def get_proxies(host, remoteip):
     proxies = []
     remoteaddr = netaddr.IPAddress(remoteip)
     idx = 0
-    for proxydict in wpadinfo['proxies']:
+    while idx < len(wpadinfo['proxies']):
+        proxydict = wpadinfo['proxies'][idx]
         if 'ipranges' in proxydict:
             # delete the entry if the remoteaddr doesn't match
             #  one of the ipranges
