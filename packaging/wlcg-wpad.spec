@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.7
+Version: 0.8
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,9 @@ fi
 
 
 %changelog
+* Fri Sep 30 2016 Dave Dykstra <dwd@fnal.gov> - 0.8-1
+- Fix bug with the ipranges implementation
+
 * Fri Sep 30 2016 Dave Dykstra <dwd@fnal.gov> - 0.7-1
 - Change config file name from geosort.conf to wlcgwpad.conf
 - Add support for destshexps config variable, which are shortcuts to shell
