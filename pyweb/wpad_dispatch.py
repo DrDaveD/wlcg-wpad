@@ -112,31 +112,56 @@ def dispatch(environ, start_response):
         return bad_request(start_response, host, remoteip, 'Unrecognized host name')
 
     proxies = []
-    balance = False
+    proxystr = ""
+    dests = {}
     for proxydict in wpadinfo['proxies']:
+        if 'loadbalance' in proxydict and proxydict['loadbalance'] == 'proxies':
+            balance = True
+        else:
+            balance = False
         if 'default' in proxydict:
+            indent = '    '
             proxies = proxydict['default']
-            if 'loadbalance' in proxydict and proxydict['loadbalance'] == 'proxies':
-                balance = True
+        elif 'destshexps' in conf:
+            gotone = False
+            for dest in conf['destshexps']:
+                if (dest in proxydict) and (dest not in dests):
+                    dests[dest] = None
+                    gotone = True
+                    proxies = proxydict[dest]
+                    shexps = conf['destshexps'][dest]
+                    exp = ''
+                    for shexp in shexps:
+                        if exp != '':
+                            exp += ' || '
+                        exp += 'shExpMatch(url, "' + shexp + '")'
+                    proxystr += '    if (' + exp + ') {\n'
+                    break
+            if not gotone:
+                continue
+            indent = '        '
+        else:
+            continue
+        numproxies = len(proxies)
+        if balance and numproxies > 1:
+            # insert different orderings based on a random number
+            # leave the default ordering as the last case (without an if)
+            doubleproxies = proxies + proxies
+            proxystr += indent + 'ran = Math.random();\n'
+            for i in range(1, numproxies):
+                cutoff = str(1.0 * i / numproxies)
+                proxystr += indent + 'if (ran < ' + cutoff + ') '
+                proxystr += getproxystr(doubleproxies[i:i+numproxies])
+        proxystr += indent + getproxystr(proxies)
+        if 'default' in proxydict:
             break
+        proxystr += '    }\n'
     if proxies == []:
         if 'msg' in wpadinfo:
             msg = str(wpadinfo['msg'])
         else:
-            msg = 'No proxy found for ' + remoteip
+            msg = 'No default proxy found for ' + remoteip
 	return bad_request(start_response, host, remoteip, msg)
-    proxystr = ""
-    numproxies = len(proxies)
-    if balance and numproxies > 1:
-        # insert different orderings based on a random number
-        # leave the default ordering as the last case (without an if)
-        doubleproxies = proxies + proxies
-        proxystr = '    ran = Math.random();\n'
-        for i in range(1, numproxies):
-            cutoff = str(1.0 * i / numproxies)
-            proxystr += '    if (ran < ' + cutoff + ') '
-            proxystr += getproxystr(doubleproxies[i:i+numproxies])
-    proxystr += '    ' + getproxystr(proxies)
     body = 'function FindProxyForURL(url, host) {\n' + \
     	   proxystr + \
 	   '}\n'
