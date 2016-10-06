@@ -108,6 +108,7 @@ def dispatch(environ, start_response):
             if proxies == []:
                 return bad_request(start_response, host, remoteip, msg)
             wpadinfo['proxies'] = [{'default' : proxies}]
+            logmsg(host, remoteip, 'sorted squids are ' + ';'.join(proxies))
     else:
         return bad_request(start_response, host, remoteip, 'Unrecognized host name')
 
