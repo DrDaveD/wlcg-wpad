@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.8
+Version: 0.9
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,9 @@ fi
 
 
 %changelog
+* Thu Oct 06 2016 Dave Dykstra <dwd@fnal.gov> - 0.9-1
+- Add log message when geosorted squids are returned
+
 * Fri Sep 30 2016 Dave Dykstra <dwd@fnal.gov> - 0.8-1
 - Fix bug with the ipranges implementation
 
