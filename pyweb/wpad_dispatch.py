@@ -39,17 +39,18 @@ def parse_wlcgwpad_conf():
 	    if len(words) < 2:
                 continue
             key = words[0]
-            parts = words[1].split('=')
-            if len(parts) == 0:
+            equal = words[1].find('=')
+            if equal <= 0:
                 continue
             if key not in conf:
                 conf[key] = {}
-            name = parts[0]
-            if len(parts) == 1:
+            name = words[1][0:equal]
+            value = words[1][equal+1:]
+            if len(value) == 0:
                 # there was no '='; enter name as an empty list
                 conf[key][name] = []
                 continue
-            values = parts[1].split(',')
+            values = value.split(',')
             idx = 0
             while idx < len(values):
                 value = values[idx]
@@ -73,9 +74,13 @@ def getproxystr(proxies):
     for proxy in proxies:
         if proxystr != "":
             proxystr += "; "
-        proxystr += "PROXY http://" + str(proxy)
-        if proxy.find(':') == -1:
-            proxystr += ":3128"
+        proxy = str(proxy)
+        if proxy == "DIRECT":
+            proxystr += proxy
+        else:
+            proxystr += "PROXY http://" + proxy
+            if proxy.find(':') == -1:
+                proxystr += ":3128"
     return 'return "' + proxystr + '";\n'
 
 def dispatch(environ, start_response):
@@ -104,10 +109,19 @@ def dispatch(environ, start_response):
                 del hostproxies[0]
                 logmsg(host, remoteip, 'WLCG proxy not found, falling back')
         if 'proxies' not in wpadinfo:
+            wpadinfo['proxies'] = []
+            while "=" in hostproxies[0]:
+                # A destination_alias assigned to special proxies
+                # Most often it will be just DIRECT, but can be
+                #   semicolon separated
+                aliasdests = hostproxies[0].split('=')
+                dests = aliasdests[1].split(';')
+                wpadinfo['proxies'].append({aliasdests[0] : dests})
+                del hostproxies[0]
             proxies, msg = geosort.sort_proxies(remoteip, hostproxies)
             if proxies == []:
                 return bad_request(start_response, host, remoteip, msg)
-            wpadinfo['proxies'] = [{'default' : proxies}]
+            wpadinfo['proxies'].append({'default' : proxies})
             logmsg(host, remoteip, 'sorted squids are ' + ';'.join(proxies))
     else:
         return bad_request(start_response, host, remoteip, 'Unrecognized host name')
