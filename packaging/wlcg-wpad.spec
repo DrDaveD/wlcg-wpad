@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 0.9
+Version: 1.0
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -26,8 +26,8 @@ mkdir -p $RPM_BUILD_ROOT/etc/cron.d
 install -p -m 444 misc/wlcg-wpad.cron $RPM_BUILD_ROOT/etc/cron.d/wlcg-wpad
 mkdir -p $RPM_BUILD_ROOT/etc/httpd/conf.d
 install -p -m 444 misc/wlcg-wpad.conf $RPM_BUILD_ROOT/etc/httpd/conf.d/10-wlcg-wpad.conf
-mkdir -p $RPM_BUILD_ROOT/var/www/wsgi-scripts
-install -p -m 555 misc/wlcg-wpad.wsgi $RPM_BUILD_ROOT/var/www/wsgi-scripts
+mkdir -p $RPM_BUILD_ROOT/var/www/wsgi-scripts/wlcg-wpad
+install -p -m 555 misc/wlcg-wpad.wsgi $RPM_BUILD_ROOT/var/www/wsgi-scripts/wlcg-wpad
 mkdir -p $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 install -p -m 555 misc/sync_wpad_conf $RPM_BUILD_ROOT/usr/share/wlcg-wpad
 mkdir -p $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
@@ -48,12 +48,17 @@ fi
 %files
 /etc/cron.d/*
 /etc/httpd/conf.d/*
-/var/www/wsgi-scripts/*
+/var/www/wsgi-scripts/wlcg-wpad
 /usr/share/wlcg-wpad
 /var/lib/wlcg-wpad
 
 
 %changelog
+* Wed Nov 01 2017 Dave Dykstra <dwd@fnal.gov> - 1.0-1
+- Add support for destination aliases in hostproxies
+- Add support for DIRECT proxy
+- Change WSGI config to be like the latest cvmfs-server
+
 * Thu Oct 06 2016 Dave Dykstra <dwd@fnal.gov> - 0.9-1
 - Add log message when geosorted squids are returned
 
