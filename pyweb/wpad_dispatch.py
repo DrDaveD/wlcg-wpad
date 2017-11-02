@@ -1,7 +1,7 @@
 # Dispatch a wpad.dat request
 # If the URL ends with ?ip=ADDR then use ADDR instead of $REMOTE_ADDR
 
-import sys, urlparse, copy
+import sys, urlparse, copy, time
 import wlcg_wpad
 from wpad_utils import *
 import geosort
@@ -29,10 +29,21 @@ def good_request(start_response, response_body):
     return [response_body]
 
 conf = {}
+confupdatetime = 0
+confcachetime = 300  # 5 minutes
+confmodtime = 0
 
 def parse_wlcgwpad_conf():
     global conf
+    global confmodtime
     try:
+        modtime = os.stat(wlcgwpadconffile).st_mtime
+        if modtime == confmodtime:
+            # no change
+            return
+        confmodtime = modtime
+	logmsg('-', '-', 'reading ' + wlcgwpadconffile)
+        conf = {}
 	for line in open(wlcgwpadconffile, 'r').read().split('\n'):
             line = line.split('#',1)[0]  # removes comments
 	    words = line.split(None,1)
@@ -66,8 +77,6 @@ def parse_wlcgwpad_conf():
 	logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
     return
 
-parse_wlcgwpad_conf()
-
 # return a proxy auto config statement that returns a list of proxies
 def getproxystr(proxies):
     proxystr = ""
@@ -96,11 +105,17 @@ def dispatch(environ, start_response):
 	    # for testing
 	    remoteip = parameters['ip'][0]
     msg = None
+    now = int(time.time())
+    global confupdatetime
+    if (now - confupdatetime) > confcachetime:
+	confupdatetime = now
+        parse_wlcgwpad_conf()
+
     wpadinfo = {}
     if ('hostproxies' in conf) and (host in conf['hostproxies']):
         hostproxies = copy.copy(conf['hostproxies'][host])
         if hostproxies[0] == 'WLCG':
-            wpadinfo = wlcg_wpad.get_proxies(host, remoteip)
+            wpadinfo = wlcg_wpad.get_proxies(host, remoteip, now)
             if 'msg' in wpadinfo:
                 msg = wpadinfo['msg']
             if 'proxies' not in wpadinfo:
