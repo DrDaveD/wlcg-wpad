@@ -1,10 +1,10 @@
 # Find proxies for WLCG grid site
 
-import sys, os, copy, time, anyjson, netaddr
+import sys, os, copy, anyjson, netaddr
 from wpad_utils import *
 import GeoIP
 
-cachetime = 300  # 5 minutes
+orgscachetime = 300  # 5 minutes
 
 workerproxiesfile = "/var/lib/wlcg-wpad/worker-proxies.json"
 gi = GeoIP.open("/var/lib/wlcg-wpad/geo/GeoIPOrg.dat", GeoIP.GEOIP_STANDARD)
@@ -46,10 +46,9 @@ def updateorgs(host):
 
     logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies, ' + str(len(squidorgs)) + ' squidorgs and ' + str(len(orgs)) + ' orgs')
 
-def get_proxies(host, remoteip):
+def get_proxies(host, remoteip, now):
     global orgsupdatetime
-    now = int(time.time())
-    if (now - orgsupdatetime) > cachetime:
+    if (now - orgsupdatetime) > orgscachetime:
 	orgsupdatetime = now
 	updateorgs(host)
     org = gi.org_by_addr(remoteip)
