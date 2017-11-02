@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.0
+Version: 1.1
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,10 @@ fi
 
 
 %changelog
+* Thu Nov 02 2017 Dave Dykstra <dwd@fnal.gov> - 1.1-1
+- Re-read wlcgpad.conf if it changes.  Check every 5 minutes, just like
+  worker-proxy.json already was.
+
 * Wed Nov 01 2017 Dave Dykstra <dwd@fnal.gov> - 1.0-1
 - Add support for destination aliases in hostproxies
 - Add support for DIRECT proxy
