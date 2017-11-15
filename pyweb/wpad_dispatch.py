@@ -42,12 +42,12 @@ def parse_wlcgwpad_conf():
             # no change
             return
         confmodtime = modtime
-	logmsg('-', '-', 'reading ' + wlcgwpadconffile)
+        logmsg('-', '-', 'reading ' + wlcgwpadconffile)
         conf = {}
-	for line in open(wlcgwpadconffile, 'r').read().split('\n'):
+        for line in open(wlcgwpadconffile, 'r').read().split('\n'):
             line = line.split('#',1)[0]  # removes comments
-	    words = line.split(None,1)
-	    if len(words) < 2:
+            words = line.split(None,1)
+            if len(words) < 2:
                 continue
             key = words[0]
             equal = words[1].find('=')
@@ -74,7 +74,7 @@ def parse_wlcgwpad_conf():
                     idx += 1
             conf[key][name] = values
     except Exception, e:
-	logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
+        logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
         confmodtime = 0
     return
 
@@ -95,23 +95,23 @@ def getproxystr(proxies):
 
 def dispatch(environ, start_response):
     if 'SERVER_NAME' not in environ:
-	return bad_request(start_response, 'wpad-dispatch', '-', 'SERVER_NAME not set')
+        return bad_request(start_response, 'wpad-dispatch', '-', 'SERVER_NAME not set')
     if 'REMOTE_ADDR' not in environ:
-	return bad_request(start_response, 'wpad-dispatch', '-', 'REMOTE_ADDR not set')
+        return bad_request(start_response, 'wpad-dispatch', '-', 'REMOTE_ADDR not set')
     host = environ['SERVER_NAME']
     remoteip = environ['REMOTE_ADDR']
     if 'QUERY_STRING' in environ:
-	parameters = urlparse.parse_qs(environ['QUERY_STRING'])
-	if 'ip' in parameters:
-	    # for testing
-	    remoteip = parameters['ip'][0]
+        parameters = urlparse.parse_qs(environ['QUERY_STRING'])
+        if 'ip' in parameters:
+            # for testing
+            remoteip = parameters['ip'][0]
     msg = None
     now = int(time.time())
     global confupdatetime
     lock = threading.Lock()
     lock.acquire()
     if (now - confupdatetime) > confcachetime:
-	confupdatetime = now
+        confupdatetime = now
         lock.release()
         parse_wlcgwpad_conf()
     else:
@@ -197,10 +197,10 @@ def dispatch(environ, start_response):
             msg = str(wpadinfo['msg'])
         else:
             msg = 'No default proxy found for ' + remoteip
-	return bad_request(start_response, host, remoteip, msg)
+        return bad_request(start_response, host, remoteip, msg)
     body = 'function FindProxyForURL(url, host) {\n' + \
-    	   proxystr + \
-	   '}\n'
+           proxystr + \
+           '}\n'
     if msg is not None:
         body = '// ' + str(msg) + '\n' + body
     return good_request(start_response, body)

@@ -16,20 +16,20 @@ squidorgs = {}
 
 def updateorgs(host):
     try:
-	global orgsmodtime
-	modtime = os.stat(workerproxiesfile).st_mtime
-	if modtime == orgsmodtime:
-	    # no change
-	    return
-	orgsmodtime = modtime
-	handle = open(workerproxiesfile, 'r')
-	jsondata = handle.read()
-	handle.close()
-	workerproxies = anyjson.deserialize(jsondata)
+        global orgsmodtime
+        modtime = os.stat(workerproxiesfile).st_mtime
+        if modtime == orgsmodtime:
+            # no change
+            return
+        orgsmodtime = modtime
+        handle = open(workerproxiesfile, 'r')
+        jsondata = handle.read()
+        handle.close()
+        workerproxies = anyjson.deserialize(jsondata)
     except Exception, e:
-	logmsg(host, '-',  'error reading ' + workerproxiesfile + ', using old: ' + str(e))
+        logmsg(host, '-',  'error reading ' + workerproxiesfile + ', using old: ' + str(e))
         orgsmodtime = 0
-	return
+        return
 
     for squid in workerproxies:
         if 'ip' not in workerproxies[squid]:
@@ -52,21 +52,21 @@ def get_proxies(host, remoteip, now):
     lock = threading.Lock()
     lock.acquire()
     if (now - orgsupdatetime) > orgscachetime:
-	orgsupdatetime = now
+        orgsupdatetime = now
         lock.release()
-	updateorgs(host)
+        updateorgs(host)
     else:
         lock.release()
     org = gi.org_by_addr(remoteip)
     if org is None:
-	logmsg(host, remoteip, 'no org found for ip address')
-	return {'msg': 'no org found for remote ip address'}
+        logmsg(host, remoteip, 'no org found for ip address')
+        return {'msg': 'no org found for remote ip address'}
     if org not in orgs:
-	logmsg(host, remoteip, 'no squid found for org ' + org)
-	return {'msg': 'no squid found matching the remote ip address'}
+        logmsg(host, remoteip, 'no squid found for org ' + org)
+        return {'msg': 'no squid found matching the remote ip address'}
     wpadinfo = copy.deepcopy(orgs[org])
     if 'disabled' in wpadinfo:
-	logmsg(host, remoteip, 'disabled: ' + wpadinfo['disabled'])
+        logmsg(host, remoteip, 'disabled: ' + wpadinfo['disabled'])
         wpadinfo['proxies'] = []
         wpadinfo['msg'] = wpadinfo['disabled']
         return wpadinfo

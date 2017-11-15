@@ -14,7 +14,7 @@ gi = GeoIP.open("/var/lib/cvmfs-server/geo/GeoLiteCity.dat", GeoIP.GEOIP_STANDAR
 gi6 = GeoIP.open("/var/lib/cvmfs-server/geo/GeoLiteCityv6.dat", GeoIP.GEOIP_STANDARD)
 
 proxygirs = {}
-lookup_ttl = 60*5	# 5 minutes
+lookup_ttl = 60*5       # 5 minutes
 
 # function came from http://www.johndcook.com/python_longitude_latitude.html
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
@@ -68,27 +68,27 @@ def sort_proxies(rem_addr, proxies):
     onegood = False
     now = int(time.time())
     for proxy in proxies:
-	colon = proxy.find(':')
-	if colon == -1:
-	    name = proxy
-	    proxy += ':3128'
-	else:
-	    name = proxy[0:colon]
-	if (proxy not in proxygirs) or (proxygirs[proxy][1] < (now - lookup_ttl)):
-	    # Look up names periodically in case their IP values have changed
-	    #    even though it's unlikely their geo info has changed
+        colon = proxy.find(':')
+        if colon == -1:
+            name = proxy
+            proxy += ':3128'
+        else:
+            name = proxy[0:colon]
+        if (proxy not in proxygirs) or (proxygirs[proxy][1] < (now - lookup_ttl)):
+            # Look up names periodically in case their IP values have changed
+            #    even though it's unlikely their geo info has changed
 
             # try IPv4 first since that DB is currently better, and most
-	    #    machines today are dual stack if they have IPv6
+            #    machines today are dual stack if they have IPv6
             gir_proxy = gi.record_by_name(name)
             if gir_proxy is None:
                 gir_proxy = gi6.record_by_name_v6(name)
-	    if (gir_proxy is None) and (proxy in proxygirs):
-		# reuse old value, there may have been a temporary DNS problem
-		gir_proxy = proxygirs[proxy][0]
-	    proxygirs[proxy] = [gir_proxy, now]
-	else:
-	    gir_proxy = proxygirs[proxy][0]
+            if (gir_proxy is None) and (proxy in proxygirs):
+                # reuse old value, there may have been a temporary DNS problem
+                gir_proxy = proxygirs[proxy][0]
+            proxygirs[proxy] = [gir_proxy, now]
+        else:
+            gir_proxy = proxygirs[proxy][0]
 
         if gir_proxy is None:
             # put it on the end of the list
