@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.1
+Version: 1.2
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,10 @@ fi
 
 
 %changelog
+* Wed Nov 15 2017 Dave Dykstra <dwd@fnal.gov> - 1.2-1
+- Lock the updates of reading config files, so only one thread ever does it.
+- Remove tabs from source files.
+
 * Thu Nov 02 2017 Dave Dykstra <dwd@fnal.gov> - 1.1-1
 - Re-read wlcgpad.conf if it changes.  Check every 5 minutes, just like
   worker-proxy.json already was.
