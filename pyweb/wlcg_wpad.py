@@ -1,6 +1,6 @@
 # Find proxies for WLCG grid site
 
-import sys, os, copy, anyjson, netaddr
+import sys, os, copy, anyjson, netaddr, threading
 from wpad_utils import *
 import GeoIP
 
@@ -28,6 +28,7 @@ def updateorgs(host):
 	workerproxies = anyjson.deserialize(jsondata)
     except Exception, e:
 	logmsg(host, '-',  'error reading ' + workerproxiesfile + ', using old: ' + str(e))
+        orgsmodtime = 0
 	return
 
     for squid in workerproxies:
@@ -48,9 +49,14 @@ def updateorgs(host):
 
 def get_proxies(host, remoteip, now):
     global orgsupdatetime
+    lock = threading.Lock()
+    lock.acquire()
     if (now - orgsupdatetime) > orgscachetime:
 	orgsupdatetime = now
+        lock.release()
 	updateorgs(host)
+    else:
+        lock.release()
     org = gi.org_by_addr(remoteip)
     if org is None:
 	logmsg(host, remoteip, 'no org found for ip address')

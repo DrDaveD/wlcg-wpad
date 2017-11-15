@@ -1,7 +1,7 @@
 # Dispatch a wpad.dat request
 # If the URL ends with ?ip=ADDR then use ADDR instead of $REMOTE_ADDR
 
-import sys, urlparse, copy, time
+import sys, urlparse, copy, time, threading
 import wlcg_wpad
 from wpad_utils import *
 import geosort
@@ -75,6 +75,7 @@ def parse_wlcgwpad_conf():
             conf[key][name] = values
     except Exception, e:
 	logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
+        confmodtime = 0
     return
 
 # return a proxy auto config statement that returns a list of proxies
@@ -107,9 +108,14 @@ def dispatch(environ, start_response):
     msg = None
     now = int(time.time())
     global confupdatetime
+    lock = threading.Lock()
+    lock.acquire()
     if (now - confupdatetime) > confcachetime:
 	confupdatetime = now
+        lock.release()
         parse_wlcgwpad_conf()
+    else:
+        lock.release()
 
     wpadinfo = {}
     if ('hostproxies' in conf) and (host in conf['hostproxies']):
