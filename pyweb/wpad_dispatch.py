@@ -6,6 +6,8 @@ import wlcg_wpad
 from wpad_utils import *
 import geosort
 
+confcachetime = 300  # 5 minutes
+
 wlcgwpadconffile = '/var/lib/wlcg-wpad/wlcgwpad.conf'
 
 def error_request(start_response, response_code, response_body):
@@ -30,7 +32,6 @@ def good_request(start_response, response_body):
 
 conf = {}
 confupdatetime = 0
-confcachetime = 300  # 5 minutes
 confmodtime = 0
 
 def parse_wlcgwpad_conf():
@@ -43,7 +44,7 @@ def parse_wlcgwpad_conf():
             return
         confmodtime = modtime
         logmsg('-', '-', 'reading ' + wlcgwpadconffile)
-        conf = {}
+        newconf = {}
         for line in open(wlcgwpadconffile, 'r').read().split('\n'):
             line = line.split('#',1)[0]  # removes comments
             words = line.split(None,1)
@@ -53,26 +54,27 @@ def parse_wlcgwpad_conf():
             equal = words[1].find('=')
             if equal <= 0:
                 continue
-            if key not in conf:
-                conf[key] = {}
+            if key not in newconf:
+                newconf[key] = {}
             name = words[1][0:equal]
             value = words[1][equal+1:]
             if len(value) == 0:
                 # there was no '='; enter name as an empty list
-                conf[key][name] = []
+                newconf[key][name] = []
                 continue
             values = value.split(',')
             idx = 0
             while idx < len(values):
                 value = values[idx]
-                if value in conf[key]:
+                if value in newconf[key]:
                     # replace value with list from previously defined name
-                    newvalues = conf[key][value]
+                    newvalues = newconf[key][value]
                     values[idx:idx+1] = newvalues
                     idx += len(newvalues)
                 else:
                     idx += 1
-            conf[key][name] = values
+            newconf[key][name] = values
+        conf = newconf
     except Exception, e:
         logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
         confmodtime = 0
