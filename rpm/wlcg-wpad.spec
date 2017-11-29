@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.2
+Version: 1.3
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,12 @@ fi
 
 
 %changelog
+* Wed Nov 29 2017 Dave Dykstra <dwd@fnal.gov> - 1.3-1
+- Update worker proxies from scratch instead of modifying in place.  This
+  enables removed sites to be deleted.
+- Update configuration and worker proxies in separate space so the updates
+  are atomic to other threads.
+
 * Wed Nov 15 2017 Dave Dykstra <dwd@fnal.gov> - 1.2-1
 - Lock the updates of reading config files, so only one thread ever does it.
 - Remove tabs from source files.
