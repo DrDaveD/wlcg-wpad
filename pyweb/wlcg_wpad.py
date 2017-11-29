@@ -12,7 +12,6 @@ gi = GeoIP.open("/var/lib/wlcg-wpad/geo/GeoIPOrg.dat", GeoIP.GEOIP_STANDARD)
 orgsupdatetime = 0
 orgsmodtime = 0
 orgs = {}
-squidorgs = {}
 
 def updateorgs(host):
     try:
@@ -31,6 +30,7 @@ def updateorgs(host):
         orgsmodtime = 0
         return
 
+    neworgs = {}
     for squid in workerproxies:
         if 'ip' not in workerproxies[squid]:
             logmsg(host, '-', 'no ip for ' + squid + ', skipping')
@@ -39,13 +39,15 @@ def updateorgs(host):
         if org is None:
             logmsg(host, '-', 'no org for ' + squid + ', skipping')
             continue
-        squidorgs[squid] = org
-        orgs[org] = workerproxies[squid]
-        if 'proxies' not in orgs[org]:
-            orgs[org]['proxies'] = [{'default' : [ squid + ':3128' ]}]
+        neworgs[org] = workerproxies[squid]
+        if 'proxies' not in neworgs[org]:
+            neworgs[org]['proxies'] = [{'default' : [ squid + ':3128' ]}]
             continue
 
-    logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies, ' + str(len(squidorgs)) + ' squidorgs and ' + str(len(orgs)) + ' orgs')
+    global orgs
+    orgs = neworgs
+
+    logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(orgs)) + ' orgs')
 
 def get_proxies(host, remoteip, now):
     global orgsupdatetime
