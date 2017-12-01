@@ -165,7 +165,7 @@ def dispatch(environ, start_response):
                         if unibackupalias in proxydict:
                             # this is an exact matching destalias, just add
                             #  backups and we're done with this alias
-                            proxydict['backups'] = backups[backupalias]
+                            proxydict['_backups'] = backups[backupalias]
                             del backups[backupalias]
                         elif backupalias in conf['_destsubs']:
                             subs = conf['_destsubs'][backupalias]
@@ -194,13 +194,13 @@ def dispatch(environ, start_response):
                                         newproxydict = copy.copy(proxydict)
                                         newproxydict[match] = proxydict[unisub]
                                         del newproxydict[unisub]
-                                        newproxydict['backups'] = backups[match]
+                                        newproxydict['_backups'] = backups[match]
                                         newproxydicts.append(newproxydict)
                                         del backups[match]
                                     match = matches[-1]
                                     proxydict[match] = proxydict[unisub]
                                     del proxydict[unisub]
-                                    proxydict['backups'] = backups[match]
+                                    proxydict['_backups'] = backups[match]
                                     del backups[match]
 
                     if u'default' in proxydict:
@@ -208,7 +208,7 @@ def dispatch(environ, start_response):
                             newproxydict = copy.copy(proxydict)
                             newproxydict[backupalias] = proxydict[u'default']
                             del newproxydict[u'default']
-                            newproxydict['backups'] = backups[backupalias]
+                            newproxydict['_backups'] = backups[backupalias]
                             newproxydicts.append(newproxydict)
                     newproxydicts.append(proxydict)
                 wpadinfo['proxies'] = newproxydicts
@@ -265,8 +265,8 @@ def dispatch(environ, start_response):
         else:
             continue
         backups = []
-        if 'backups' in proxydict:
-            backups = proxydict['backups']
+        if '_backups' in proxydict:
+            backups = proxydict['_backups']
         numproxies = len(proxies)
         if balance and numproxies > 1:
             # insert different orderings based on a random number
