@@ -67,6 +67,15 @@ def parse_wlcgwpad_conf():
             while idx < len(values):
                 value = values[idx]
                 if value in newconf[key]:
+                    if key == 'destshexps':
+                        # keep track of destalias substitutions in reverse,
+                        #  for the implementation of backupproxies
+                        if '_destsubs' not in newconf:
+                            newconf['_destsubs'] = {}
+                        if value not in newconf['_destsubs']:
+                            newconf['_destsubs'][value] = []
+                        newconf['_destsubs'][value].append(name)
+
                     # replace value with list from previously defined name
                     newvalues = newconf[key][value]
                     values[idx:idx+1] = newvalues
@@ -122,7 +131,7 @@ def dispatch(environ, start_response):
     wpadinfo = {}
     if ('hostproxies' in conf) and (host in conf['hostproxies']):
         hostproxies = copy.copy(conf['hostproxies'][host])
-        if hostproxies[0] == 'WLCG':
+        if hostproxies[0] == 'WLCG' or hostproxies[0] == 'WLCG+BACKUP':
             wpadinfo = wlcg_wpad.get_proxies(host, remoteip, now)
             if 'msg' in wpadinfo:
                 msg = wpadinfo['msg']
@@ -131,8 +140,82 @@ def dispatch(environ, start_response):
                     return bad_request(start_response, host, remoteip, str(msg))
                 del hostproxies[0]
                 logmsg(host, remoteip, 'WLCG proxy not found, falling back')
+            elif (hostproxies[0] == 'WLCG+BACKUP') and ('destshexps' in conf) \
+                        and ('backupproxies' in conf):
+                backups = {}
+                backupdests = []
+                for backupalias in conf['backupproxies']:
+                    if backupalias not in conf['destshexps']:
+                        continue
+                    proxies, msg = geosort.sort_proxies(remoteip,
+                            conf['backupproxies'][backupalias])
+                    if proxies == []:
+                        return bad_request(start_response, host, remoteip, msg)
+                    backups[backupalias] = proxies
+                    backupdests.append(backupalias + '=' + ';'.join(proxies))
+                logmsg(host, remoteip, 'backup proxies are ' + ','.join(backupdests))
+
+                newproxydicts = []
+                for proxydict in wpadinfo['proxies']:
+                    for backupalias in backups.keys():
+                        if backupalias not in backups:
+                            # it has been deleted by previous iteration, skip
+                            continue
+                        unibackupalias = backupalias.decode('utf-8')
+                        if unibackupalias in proxydict:
+                            # this is an exact matching destalias, just add
+                            #  backups and we're done with this alias
+                            proxydict['backups'] = backups[backupalias]
+                            del backups[backupalias]
+                        elif backupalias in conf['_destsubs']:
+                            subs = conf['_destsubs'][backupalias]
+                            gotone = False
+                            for sub in subs:
+                                unisub = sub.decode('utf-8')
+                                if unisub in proxydict:
+                                    gotone = True
+                                    break
+                            if gotone:
+                                # matches a substitution; if all the
+                                #  substitutions for this alias match a
+                                #  backup alias, replace this entry with 
+                                #  the backup-specific entries
+                                matches = []
+                                for destsub in conf['_destsubs']:
+                                    if sub in conf['_destsubs'][destsub]:
+                                        matches.append(destsub)
+                                allmatch = True
+                                for match in matches:
+                                    if match not in backups:
+                                        allmatch = False
+                                        break
+                                if allmatch:
+                                    for match in matches[0:-1]:
+                                        newproxydict = copy.copy(proxydict)
+                                        newproxydict[match] = proxydict[unisub]
+                                        del newproxydict[unisub]
+                                        newproxydict['backups'] = backups[match]
+                                        newproxydicts.append(newproxydict)
+                                        del backups[match]
+                                    match = matches[-1]
+                                    proxydict[match] = proxydict[unisub]
+                                    del proxydict[unisub]
+                                    proxydict['backups'] = backups[match]
+                                    del backups[match]
+
+                    if u'default' in proxydict:
+                        for backupalias in backups:
+                            newproxydict = copy.copy(proxydict)
+                            newproxydict[backupalias] = proxydict[u'default']
+                            del newproxydict[u'default']
+                            newproxydict['backups'] = backups[backupalias]
+                            newproxydicts.append(newproxydict)
+                    newproxydicts.append(proxydict)
+                wpadinfo['proxies'] = newproxydicts
+
         if 'proxies' not in wpadinfo:
             wpadinfo['proxies'] = []
+            predests = []
             while "=" in hostproxies[0]:
                 # A destination_alias assigned to special proxies
                 # Most often it will be just DIRECT, but can be
@@ -140,12 +223,13 @@ def dispatch(environ, start_response):
                 aliasdests = hostproxies[0].split('=')
                 dests = aliasdests[1].split(';')
                 wpadinfo['proxies'].append({aliasdests[0] : dests})
+                predests.append(hostproxies[0])
                 del hostproxies[0]
             proxies, msg = geosort.sort_proxies(remoteip, hostproxies)
             if proxies == []:
                 return bad_request(start_response, host, remoteip, msg)
             wpadinfo['proxies'].append({'default' : proxies})
-            logmsg(host, remoteip, 'sorted squids are ' + ';'.join(proxies))
+            logmsg(host, remoteip, 'sorted squids are ' + ','.join(predests + proxies))
     else:
         return bad_request(start_response, host, remoteip, 'Unrecognized host name')
 
@@ -180,6 +264,9 @@ def dispatch(environ, start_response):
             indent = '        '
         else:
             continue
+        backups = []
+        if 'backups' in proxydict:
+            backups = proxydict['backups']
         numproxies = len(proxies)
         if balance and numproxies > 1:
             # insert different orderings based on a random number
@@ -189,8 +276,8 @@ def dispatch(environ, start_response):
             for i in range(1, numproxies):
                 cutoff = str(1.0 * i / numproxies)
                 proxystr += indent + 'if (ran < ' + cutoff + ') '
-                proxystr += getproxystr(doubleproxies[i:i+numproxies])
-        proxystr += indent + getproxystr(proxies)
+                proxystr += getproxystr(doubleproxies[i:i+numproxies]+backups)
+        proxystr += indent + getproxystr(proxies+backups)
         if 'default' in proxydict:
             break
         proxystr += '    }\n'
