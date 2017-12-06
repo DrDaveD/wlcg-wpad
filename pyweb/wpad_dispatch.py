@@ -156,7 +156,19 @@ def dispatch(environ, start_response):
                 logmsg(host, remoteip, 'backup proxies are ' + ','.join(backupdests))
 
                 newproxydicts = []
+                matchedaliases = []
                 for proxydict in wpadinfo['proxies']:
+                    # print 'starting proxydict ' + str(proxydict)
+                    gotone = False
+                    for alias in matchedaliases:
+                        if alias in proxydict:
+                            gotone = True
+                            break
+                    if gotone:
+                        # skip the proxydict if it is for an alias that
+                        #  has already been processed
+                        # print 'skipping because matched alias ' + alias
+                        continue
                     for backupalias in backups.keys():
                         if backupalias not in backups:
                             # it has been deleted by previous iteration, skip
@@ -167,6 +179,7 @@ def dispatch(environ, start_response):
                             #  backups and we're done with this alias
                             proxydict['_backups'] = backups[backupalias]
                             del backups[backupalias]
+                            matchedaliases.append(unibackupalias)
                         elif backupalias in conf['_destsubs']:
                             subs = conf['_destsubs'][backupalias]
                             gotone = False
@@ -190,14 +203,18 @@ def dispatch(environ, start_response):
                                         allmatch = False
                                         break
                                 if allmatch:
+                                    matchedaliases.append(unisub)
                                     for match in matches[0:-1]:
+                                        # print 'allmatch match: ' + match
                                         newproxydict = copy.copy(proxydict)
                                         newproxydict[match] = proxydict[unisub]
                                         del newproxydict[unisub]
                                         newproxydict['_backups'] = backups[match]
                                         newproxydicts.append(newproxydict)
                                         del backups[match]
+                                        # print 'newproxydict: ' + str(newproxydict)
                                     match = matches[-1]
+                                    # print 'last match: ' + match
                                     proxydict[match] = proxydict[unisub]
                                     del proxydict[unisub]
                                     proxydict['_backups'] = backups[match]
@@ -205,12 +222,28 @@ def dispatch(environ, start_response):
 
                     if u'default' in proxydict:
                         for backupalias in backups:
+                            # first look to see if the name of this alias is
+                            #   a superstring of another one
+                            gotone = False
+                            for otheralias in backups:
+                                if otheralias == backupalias:
+                                    continue
+                                if otheralias in backupalias:
+                                    gotone = True
+                                    break
+                            if gotone:
+                                # it was a superstring, so skip it; the
+                                #  other backupalias will cover it
+                                continue
                             newproxydict = copy.copy(proxydict)
                             newproxydict[backupalias] = proxydict[u'default']
                             del newproxydict[u'default']
                             newproxydict['_backups'] = backups[backupalias]
                             newproxydicts.append(newproxydict)
+                            # print 'newproxydict: ' + str(newproxydict)
+                    # print 'proxydict: ' + str(proxydict)
                     newproxydicts.append(proxydict)
+
                 wpadinfo['proxies'] = newproxydicts
 
         if 'proxies' not in wpadinfo:
