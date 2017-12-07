@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.3
+Version: 1.4
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,9 @@ fi
 
 
 %changelog
+* Wed Dec 06 2017 Dave Dykstra <dwd@fnal.gov> - 1.4-1
+- Add support for backupproxies including WLCG+BACKUP in wlcgwpad.conf.
+
 * Wed Nov 29 2017 Dave Dykstra <dwd@fnal.gov> - 1.3-1
 - Update worker proxies from scratch instead of modifying in place.  This
   enables removed sites to be deleted.
