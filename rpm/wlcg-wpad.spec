@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.4
+Version: 1.5
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,9 @@ fi
 
 
 %changelog
+* Mon Feb 19 2018 Dave Dykstra <dwd@fnal.gov> 1.5-1
+- Add rsync timeouts to prevent it from hanging indefinitely.
+
 * Wed Dec 06 2017 Dave Dykstra <dwd@fnal.gov> - 1.4-1
 - Add support for backupproxies including WLCG+BACKUP in wlcgwpad.conf.
 
