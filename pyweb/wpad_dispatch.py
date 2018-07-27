@@ -102,6 +102,8 @@ def getproxystr(proxies):
             proxystr += "PROXY http://" + proxy
             if proxy.find(':') == -1:
                 proxystr += ":3128"
+    if proxystr == "":
+        proxystr = 'NONE'
     return 'return "' + proxystr + '";\n'
 
 def dispatch(environ, start_response):
@@ -129,6 +131,7 @@ def dispatch(environ, start_response):
         lock.release()
 
     wpadinfo = {}
+    gotoneda = False
     if ('hostproxies' in conf) and (host in conf['hostproxies']):
         hostproxies = copy.copy(conf['hostproxies'][host])
         if hostproxies[0] == 'WLCG' or hostproxies[0] == 'WLCG+BACKUP':
@@ -249,17 +252,19 @@ def dispatch(environ, start_response):
         if 'proxies' not in wpadinfo:
             wpadinfo['proxies'] = []
             predests = []
-            while "=" in hostproxies[0]:
+            while len(hostproxies) > 0 and "=" in hostproxies[0]:
                 # A destination_alias assigned to special proxies
                 # Most often it will be just DIRECT, but can be
                 #   semicolon separated
+                gotoneda = True
                 aliasdests = hostproxies[0].split('=')
                 dests = aliasdests[1].split(';')
                 wpadinfo['proxies'].append({aliasdests[0] : dests})
                 predests.append(hostproxies[0])
                 del hostproxies[0]
             proxies, msg = geosort.sort_proxies(remoteip, hostproxies)
-            if proxies == []:
+            # having no proxy is allowed if there is a destination_alias
+            if proxies == [] and not gotoneda:
                 return bad_request(start_response, host, remoteip, msg)
             wpadinfo['proxies'].append({'default' : proxies})
             logmsg(host, remoteip, 'sorted squids are ' + ','.join(predests + proxies))
@@ -314,7 +319,7 @@ def dispatch(environ, start_response):
         if 'default' in proxydict:
             break
         proxystr += '    }\n'
-    if proxies == []:
+    if proxies == [] and not gotoneda:
         if 'msg' in wpadinfo:
             msg = str(wpadinfo['msg'])
         else:
