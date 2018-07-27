@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.5
+Version: 1.6
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -54,6 +54,13 @@ fi
 
 
 %changelog
+* Fri Jul 27 2018 Dave Dykstra <dwd@fnal.gov> 1.6-1
+- If no proxies are specified in hostproxies after a destination alias,
+  make the response return NONE as a default.  That causes frontier to
+  give a fatal error if it hits the case, which is what I want, but cvmfs
+  skips past it.  I believe that cvmfs will not connect to the server
+  however without a DIRECT proxy so it should still fail too.
+
 * Mon Feb 19 2018 Dave Dykstra <dwd@fnal.gov> 1.5-1
 - Add rsync timeouts to prevent it from hanging indefinitely.
 
