@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.6
+Version: 1.7
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -26,6 +26,7 @@ mkdir -p $RPM_BUILD_ROOT/etc/cron.d
 install -p -m 444 misc/wlcg-wpad.cron $RPM_BUILD_ROOT/etc/cron.d/wlcg-wpad
 mkdir -p $RPM_BUILD_ROOT/etc/httpd/conf.d
 install -p -m 444 misc/wlcg-wpad.conf $RPM_BUILD_ROOT/etc/httpd/conf.d/10-wlcg-wpad.conf
+install -p -m 444 misc/geoapi.conf $RPM_BUILD_ROOT/etc/httpd/conf.d/11-geoapi.conf
 mkdir -p $RPM_BUILD_ROOT/var/www/wsgi-scripts/wlcg-wpad
 install -p -m 555 misc/wlcg-wpad.wsgi $RPM_BUILD_ROOT/var/www/wsgi-scripts/wlcg-wpad
 mkdir -p $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
@@ -54,6 +55,9 @@ fi
 
 
 %changelog
+* Sun Aug 19 2018 Dave Dykstra <dwd@fnal.gov> 1.7-1
+- Add support for the cvmfs geoapi, for stashcp.
+
 * Fri Jul 27 2018 Dave Dykstra <dwd@fnal.gov> 1.6-1
 - If no proxies are specified in hostproxies after a destination alias,
   make the response return NONE as a default.  That causes frontier to
