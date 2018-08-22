@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.7
+Version: 1.8
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -10,7 +10,7 @@ Source0: https://frontier.cern.ch/dist/%{name}-%{version}.tar.gz
 
 Requires: httpd
 Requires: mod_wsgi
-Requires: cvmfs-server
+Requires: cvmfs-server <= 2.5.0
 Requires: python-anyjson
 Requires: python-netaddr
 
@@ -55,6 +55,9 @@ fi
 
 
 %changelog
+* Tue Aug 21 2018 Dave Dykstra <dwd@fnal.gov> 1.8-1
+- Require cvmfs-server <= 2.5.0.  2.5.1 has an incompatible geo db.
+
 * Sun Aug 19 2018 Dave Dykstra <dwd@fnal.gov> 1.7-1
 - Add support for the cvmfs geoapi, for stashcp.
 
