@@ -1,7 +1,7 @@
 # Dispatch a wpad.dat request
 # If the URL ends with ?ip=ADDR then use ADDR instead of $REMOTE_ADDR
 
-import sys, urlparse, copy, time, threading
+import sys, urlparse, urllib, copy, time, threading
 import wlcg_wpad
 from wpad_utils import *
 import geosort
@@ -114,7 +114,7 @@ def dispatch(environ, start_response):
     host = environ['SERVER_NAME']
     remoteip = environ['REMOTE_ADDR']
     if 'QUERY_STRING' in environ:
-        parameters = urlparse.parse_qs(environ['QUERY_STRING'])
+        parameters = urlparse.parse_qs(urllib.unquote(environ['QUERY_STRING']))
         if 'ip' in parameters:
             # for testing
             remoteip = parameters['ip'][0]
