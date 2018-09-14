@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.8
+Version: 1.9
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -55,6 +55,10 @@ fi
 
 
 %changelog
+* Fri Sep 14 2018 Dave Dykstra <dwd@fnal.gov> 1.9-1
+- Add support for unquoting the ? parameter.  This is so an '=' can be
+  hidden from the frontier client with %3d.
+
 * Tue Aug 21 2018 Dave Dykstra <dwd@fnal.gov> 1.8-1
 - Require cvmfs-server <= 2.5.0.  2.5.1 has an incompatible geo db.
 
