@@ -4,7 +4,7 @@ import sys, os, copy, anyjson, netaddr, threading
 from wpad_utils import *
 import GeoIP
 
-orgscachetime = 300  # 5 minutes
+orgscachesecs = 300  # 5 minutes
 
 workerproxiesfile = "/var/lib/wlcg-wpad/worker-proxies.json"
 gi = GeoIP.open("/var/lib/wlcg-wpad/geo/GeoIPOrg.dat", GeoIP.GEOIP_STANDARD)
@@ -19,7 +19,7 @@ def updateorgs(host):
         modtime = os.stat(workerproxiesfile).st_mtime
         if modtime == orgsmodtime:
             # no change
-            return
+            return orgs
         orgsmodtime = modtime
         handle = open(workerproxiesfile, 'r')
         jsondata = handle.read()
@@ -28,7 +28,7 @@ def updateorgs(host):
     except Exception, e:
         logmsg(host, '-',  'error reading ' + workerproxiesfile + ', using old: ' + str(e))
         orgsmodtime = 0
-        return
+        return orgs
 
     neworgs = {}
     for squid in workerproxies:
@@ -44,29 +44,33 @@ def updateorgs(host):
             neworgs[org]['proxies'] = [{'default' : [ squid + ':3128' ]}]
             continue
 
-    global orgs
-    orgs = neworgs
+    logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(neworgs)) + ' orgs')
 
-    logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(orgs)) + ' orgs')
+    return neworgs
+
+updatelock = threading.Lock()
 
 def get_proxies(host, remoteip, now):
-    global orgsupdatetime
-    lock = threading.Lock()
-    lock.acquire()
-    if (now - orgsupdatetime) > orgscachetime:
-        orgsupdatetime = now
-        lock.release()
-        updateorgs(host)
-    else:
-        lock.release()
     org = gi.org_by_addr(remoteip)
     if org is None:
         logmsg(host, remoteip, 'no org found for ip address')
         return {'msg': 'no org found for remote ip address'}
+    global orgsupdatetime
+    updatelock.acquire()
+    if orgsupdatetime < now - orgscachesecs:
+        orgsupdatetime = now
+        updatelock.release()
+        neworgs = updateorgs(host)
+	updatelock.acquire()
+        global orgs
+        orgs = neworgs
     if org not in orgs:
+        updatelock.release()
         logmsg(host, remoteip, 'no squid found for org ' + org)
         return {'msg': 'no squid found matching the remote ip address'}
-    wpadinfo = copy.deepcopy(orgs[org])
+    wpadinfo = orgs[org]
+    updatelock.release()
+    wpadinfo = copy.deepcopy(wpadinfo)
     if 'disabled' in wpadinfo:
         logmsg(host, remoteip, 'disabled: ' + wpadinfo['disabled'])
         wpadinfo['proxies'] = []
