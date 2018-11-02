@@ -2,7 +2,8 @@
 # If the URL ends with ?ip=ADDR then use ADDR instead of $REMOTE_ADDR
 
 import sys, urlparse, urllib, copy, time, threading
-import wlcg_wpad
+from wlcg_wpad import get_proxies
+from overload import orgload
 from wpad_utils import *
 import geosort
 
@@ -135,7 +136,7 @@ def dispatch(environ, start_response):
     if ('hostproxies' in conf) and (host in conf['hostproxies']):
         hostproxies = copy.copy(conf['hostproxies'][host])
         if hostproxies[0] == 'WLCG' or hostproxies[0] == 'WLCG+BACKUP':
-            wpadinfo = wlcg_wpad.get_proxies(host, remoteip, now)
+            wpadinfo = get_proxies(host, remoteip, now)
             if 'msg' in wpadinfo:
                 msg = wpadinfo['msg']
             if 'proxies' not in wpadinfo:
@@ -248,6 +249,26 @@ def dispatch(environ, start_response):
                     newproxydicts.append(proxydict)
 
                 wpadinfo['proxies'] = newproxydicts
+
+        if 'proxies' not in wpadinfo and len(hostproxies) > 0 and \
+                hostproxies[0].startswith('OVERLOAD='):
+            params = hostproxies[0].split('=')[1].split(';')
+            del hostproxies[0]
+            if params[0] in conf['backupproxies']:
+                org, remaining, load = orgload(remoteip, int(params[1]), \
+                        int(params[2]), int(params[3]), now)
+                if remaining > 0:
+                    proxies, msg = geosort.sort_proxies(remoteip,
+                            conf['backupproxies'][params[0]])
+                    if proxies == []:
+                        return bad_request(start_response, host, remoteip, msg)
+                    wpadinfo['proxies'] = [{'default' : proxies}]
+                    msg = 'Organization blocked for ' + \
+                        str(remaining) + ' minutes (load ' + str(load) + '%),' \
+                        + ' needs own proxies; directing to backups'
+                    logmsg(host, remoteip, org + ' overload ' + \
+                        str(remaining) + ' more minutes, load ' + \
+                        str(load) + '%, proxies are ' + ','.join(proxies))
 
         if 'proxies' not in wpadinfo:
             wpadinfo['proxies'] = []
