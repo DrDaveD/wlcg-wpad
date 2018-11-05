@@ -1,8 +1,11 @@
 # calculate the load on each org
 
 import threading
-from wlcg_wpad import gi
+# cannot use from wpad_dispatch here, have to import whole module, 
+#   because of circular dependency
+import wpad_dispatch
 from wpad_utils import *
+from wlcg_wpad import gi
 
 orgcleanminutes = 5
 
@@ -35,6 +38,14 @@ def orgload(remoteip, limit, minutes, persist, now):
     org = gi.org_by_addr(remoteip)
     if org == None:
         return None, 0, 0
+
+    # See if this org is excluded
+    # wlcgwpadconf is occasionally replaced, so use a local variable for it
+    conf = wpad_dispatch.wlcgwpadconf
+    if 'overload' in conf and 'excludes' in conf['overload'] and \
+            org in conf['overload']['excludes']:
+        return None, 0, 0
+
     now = now / 60  # this function deals only with minutes
     orgdatalock.acquire()
     if orgcleantime <= now - orgcleanminutes:
@@ -49,7 +60,14 @@ def orgload(remoteip, limit, minutes, persist, now):
                 continue
             data = orgdata[oldorg]
             if persist < now - data.overloadminute and \
-                    data.newest.minute < now - minutes:
+                    data.newest != None and data.newest.minute < now - minutes:
+                # Note that there is a race condition where this could
+                #  delete an org from orgdata at the same time as another
+                #  request comes in to another thread to prolong it, but
+                #  that would only result in the loss of one count, it would
+                #  not be fatal.  The only way data.newest can equal None
+                #  is if the organization is in the process of being created
+                #  by another thread, leave that one alone.
                 del orgdata[oldorg]
                 delorgs += 1
         if delorgs > 0:
