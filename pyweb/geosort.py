@@ -8,10 +8,9 @@ import re
 import bisect
 import socket
 import time
-import GeoIP
+import maxminddb
 
-gi = GeoIP.open("/var/lib/cvmfs-server/geo/GeoLiteCity.dat", GeoIP.GEOIP_STANDARD)
-gi6 = GeoIP.open("/var/lib/cvmfs-server/geo/GeoLiteCityv6.dat", GeoIP.GEOIP_STANDARD)
+gireader = maxminddb.open_database("/var/lib/cvmfs-server/geo/GeoLite2-City.mmdb")
 
 proxygirs = {}
 lookup_ttl = 60*5       # 5 minutes
@@ -53,13 +52,10 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 def sort_proxies(rem_addr, proxies):
 
-    if rem_addr.find(':') != -1:
-        gir_rem = gi6.record_by_addr_v6(rem_addr)
-    else:
-        gir_rem = gi.record_by_addr(rem_addr)
-
+    gir_rem = gireader.get(rem_addr)
     if gir_rem is None:
         return [[], 'remote addr not found in database']
+    gir_rem = gir_rem['location']
 
     idx = 0
     arcs = []
@@ -77,12 +73,29 @@ def sort_proxies(rem_addr, proxies):
         if (proxy not in proxygirs) or (proxygirs[proxy][1] < (now - lookup_ttl)):
             # Look up names periodically in case their IP values have changed
             #    even though it's unlikely their geo info has changed
+            ai = ()
+            try:
+                ai = socket.getaddrinfo(name,80,0,0,socket.IPPROTO_TCP)
+            except:
+                pass
 
-            # try IPv4 first since that DB is currently better, and most
-            #    machines today are dual stack if they have IPv6
-            gir_proxy = gi.record_by_name(name)
-            if gir_proxy is None:
-                gir_proxy = gi6.record_by_name_v6(name)
+            # Try IPv4 first since that geo info is currently more reliable,
+            #     and most machines today are dual stack if they have IPv6
+            gir_proxy = None
+            for info in ai:
+                # look for IPv4 address first
+                if info[0] == socket.AF_INET:
+                    gir_proxy = gireader.get(info[4][0])
+                    break
+            if gir_proxy == None:
+                # look for an IPv6 address if no IPv4 record found
+                for info in ai:
+                    if info[0] == socket.AF_INET6:
+                        gir_proxy = gireader.get(info[4][0])
+                        break
+            if gir_proxy != None:
+                gir_proxy = gir_proxy['location']
+
             if (gir_proxy is None) and (proxy in proxygirs):
                 # reuse old value, there may have been a temporary DNS problem
                 gir_proxy = proxygirs[proxy][0]
