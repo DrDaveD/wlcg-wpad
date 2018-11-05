@@ -13,6 +13,13 @@ orgsupdatetime = 0
 orgsmodtime = 0
 orgs = {}
 
+def getiporg(addr):
+    org = None
+    gir = gireader.get(addr)
+    if gir is not None:
+        org = gir['organization']
+    return org
+
 def updateorgs(host):
     try:
         global orgsmodtime
@@ -35,10 +42,7 @@ def updateorgs(host):
         if 'ip' not in workerproxies[squid]:
             logmsg(host, '-', 'no ip for ' + squid + ', skipping')
             continue
-        org = None
-        gir = gireader.get(workerproxies[squid]['ip'])
-        if gir is not None:
-            org = gir['organization']
+        org = getiporg(workerproxies[squid]['ip'])
         if org is None:
             logmsg(host, '-', 'no org for ' + squid + ', skipping')
             continue
@@ -54,10 +58,7 @@ def updateorgs(host):
 updatelock = threading.Lock()
 
 def get_proxies(host, remoteip, now):
-    org = None
-    gir = gireader.get(remoteip)
-    if gir is not None:
-        org = gir['organization']
+    org = getiporg(remoteip)
     if org is None:
         logmsg(host, remoteip, 'no org found for ip address')
         return {'msg': 'no org found for remote ip address'}
