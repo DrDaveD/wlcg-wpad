@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.9
+Version: 1.10
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -10,7 +10,7 @@ Source0: https://frontier.cern.ch/dist/%{name}-%{version}.tar.gz
 
 Requires: httpd
 Requires: mod_wsgi
-Requires: cvmfs-server <= 2.5.0
+Requires: cvmfs-server >= 2.5.1
 Requires: python-anyjson
 Requires: python-netaddr
 
@@ -55,6 +55,12 @@ fi
 
 
 %changelog
+* Tue Nov  5 2018 Dave Dykstra <dwd@fnal.gov> 1.10-1
+- Add support for the OVERLOAD special proxy selection function and the
+  overload excludes option.
+- Fix the locks on reading worker-proxies.json and wlcgwpad.conf.
+- Update to GeoIP2 databases, require cvmfs-server >= 2.5.1
+
 * Fri Sep 14 2018 Dave Dykstra <dwd@fnal.gov> 1.9-1
 - Add support for unquoting the ? parameter.  This is so an '=' can be
   hidden from the frontier client with %3d.
@@ -68,9 +74,10 @@ fi
 * Fri Jul 27 2018 Dave Dykstra <dwd@fnal.gov> 1.6-1
 - If no proxies are specified in hostproxies after a destination alias,
   make the response return NONE as a default.  That causes frontier to
-  give a fatal error if it hits the case, which is what I want, but cvmfs
-  skips past it.  I believe that cvmfs will not connect to the server
-  however without a DIRECT proxy so it should still fail too.
+  give a fatal error if it hits the case, which is what I want, but
+  cvmfs skips past it (although it logs some nasty-looking error
+  messages).  Cvmfs will not connect to the server however without a
+  DIRECT proxy so it will still fail too.
 
 * Mon Feb 19 2018 Dave Dykstra <dwd@fnal.gov> 1.5-1
 - Add rsync timeouts to prevent it from hanging indefinitely.
@@ -90,7 +97,7 @@ fi
 
 * Thu Nov 02 2017 Dave Dykstra <dwd@fnal.gov> - 1.1-1
 - Re-read wlcgpad.conf if it changes.  Check every 5 minutes, just like
-  worker-proxy.json already was.
+  worker-proxies.json already was.
 
 * Wed Nov 01 2017 Dave Dykstra <dwd@fnal.gov> - 1.0-1
 - Add support for destination aliases in hostproxies
