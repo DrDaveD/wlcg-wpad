@@ -15,6 +15,12 @@ gireader = maxminddb.open_database("/var/lib/cvmfs-server/geo/GeoLite2-City.mmdb
 proxygirs = {}
 lookup_ttl = 60*5       # 5 minutes
 
+def getgeoiprecord(addr):
+    gir = gireader.get(addr)
+    if gir is not None:
+        gir = gir['location']
+    return gir
+
 # function came from http://www.johndcook.com/python_longitude_latitude.html
 def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
@@ -52,10 +58,9 @@ def distance_on_unit_sphere(lat1, long1, lat2, long2):
 
 def sort_proxies(rem_addr, proxies):
 
-    gir_rem = gireader.get(rem_addr)
+    gir_rem = getgeoiprecord(rem_addr)
     if gir_rem is None:
         return [[], 'remote addr not found in database']
-    gir_rem = gir_rem['location']
 
     idx = 0
     arcs = []
@@ -85,16 +90,14 @@ def sort_proxies(rem_addr, proxies):
             for info in ai:
                 # look for IPv4 address first
                 if info[0] == socket.AF_INET:
-                    gir_proxy = gireader.get(info[4][0])
+                    gir_proxy = getgeoiprecord(info[4][0])
                     break
             if gir_proxy == None:
                 # look for an IPv6 address if no IPv4 record found
                 for info in ai:
                     if info[0] == socket.AF_INET6:
-                        gir_proxy = gireader.get(info[4][0])
+                        gir_proxy = getgeoiprecord(info[4][0])
                         break
-            if gir_proxy != None:
-                gir_proxy = gir_proxy['location']
 
             if (gir_proxy is None) and (proxy in proxygirs):
                 # reuse old value, there may have been a temporary DNS problem
