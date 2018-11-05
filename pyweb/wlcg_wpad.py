@@ -2,12 +2,12 @@
 
 import sys, os, copy, anyjson, netaddr, threading
 from wpad_utils import *
-import GeoIP
+import maxminddb
 
 orgscachesecs = 300  # 5 minutes
 
 workerproxiesfile = "/var/lib/wlcg-wpad/worker-proxies.json"
-gi = GeoIP.open("/var/lib/wlcg-wpad/geo/GeoIPOrg.dat", GeoIP.GEOIP_STANDARD)
+gireader = maxminddb.open_database("/var/lib/wlcg-wpad/geo/GeoIP2-ISP.mmdb")
 
 orgsupdatetime = 0
 orgsmodtime = 0
@@ -35,7 +35,10 @@ def updateorgs(host):
         if 'ip' not in workerproxies[squid]:
             logmsg(host, '-', 'no ip for ' + squid + ', skipping')
             continue
-        org = gi.org_by_addr(workerproxies[squid]['ip'])
+        org = None
+        gir = gireader.get(workerproxies[squid]['ip'])
+        if gir is not None:
+            org = gir['organization']
         if org is None:
             logmsg(host, '-', 'no org for ' + squid + ', skipping')
             continue
@@ -51,7 +54,10 @@ def updateorgs(host):
 updatelock = threading.Lock()
 
 def get_proxies(host, remoteip, now):
-    org = gi.org_by_addr(remoteip)
+    org = None
+    gir = gireader.get(remoteip)
+    if gir is not None:
+        org = gir['organization']
     if org is None:
         logmsg(host, remoteip, 'no org found for ip address')
         return {'msg': 'no org found for remote ip address'}

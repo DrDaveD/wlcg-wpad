@@ -5,7 +5,7 @@ import threading
 #   because of circular dependency
 import wpad_dispatch
 from wpad_utils import *
-from wlcg_wpad import gi
+from wlcg_wpad import gireader
 
 orgcleanminutes = 5
 
@@ -35,7 +35,10 @@ orgdatalock = threading.Lock()
 # return double of org name and percent of limit in the last minutes
 def orgload(remoteip, limit, minutes, persist, now):
     global orgcleantime
-    org = gi.org_by_addr(remoteip)
+    org = None
+    gir = gireader.get(remoteip)
+    if gir is not None:
+        org = gir['organization']
     if org == None:
         return None, 0, 0
 
