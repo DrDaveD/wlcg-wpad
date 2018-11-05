@@ -31,21 +31,21 @@ def good_request(start_response, response_body):
                    ('Content-Length', str(len(response_body)))])
     return [response_body]
 
-conf = {}
+wlcgwpadconf = {}
 confupdatetime = 0
 confmodtime = 0
+conflock = threading.Lock()
 
 def parse_wlcgwpad_conf():
-    global conf
     global confmodtime
+    newconf = {}
     try:
         modtime = os.stat(wlcgwpadconffile).st_mtime
         if modtime == confmodtime:
             # no change
-            return
+            return wlcgwpadconf
         confmodtime = modtime
         logmsg('-', '-', 'reading ' + wlcgwpadconffile)
-        newconf = {}
         for line in open(wlcgwpadconffile, 'r').read().split('\n'):
             line = line.split('#',1)[0]  # removes comments
             words = line.split(None,1)
@@ -63,6 +63,16 @@ def parse_wlcgwpad_conf():
                 # there was no '='; enter name as an empty list
                 newconf[key][name] = []
                 continue
+            if key == 'overload':
+                # allow org names to have commas in them by using url unquote
+                value = urllib.unquote(value)
+                values = value.split(',')
+                # keep these org names as a set instead of a list
+                if name not in newconf[key]:
+                    newconf[key][name] = set()
+                newconf[key][name].update(values)
+                continue
+
             values = value.split(',')
             idx = 0
             while idx < len(values):
@@ -84,11 +94,11 @@ def parse_wlcgwpad_conf():
                 else:
                     idx += 1
             newconf[key][name] = values
-        conf = newconf
     except Exception, e:
         logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
         confmodtime = 0
-    return
+        return wlcgwpadconf
+    return newconf
 
 # return a proxy auto config statement that returns a list of proxies
 def getproxystr(proxies):
@@ -121,15 +131,17 @@ def dispatch(environ, start_response):
             remoteip = parameters['ip'][0]
     msg = None
     now = int(time.time())
+    global wlcgwpadconf
     global confupdatetime
-    lock = threading.Lock()
-    lock.acquire()
+    conflock.acquire()
     if (now - confupdatetime) > confcachetime:
         confupdatetime = now
-        lock.release()
-        parse_wlcgwpad_conf()
-    else:
-        lock.release()
+        conflock.release()
+        newconf = parse_wlcgwpad_conf()
+        conflock.acquire()
+        wlcgwpadconf = newconf
+    conf = wlcgwpadconf
+    conflock.release()
 
     wpadinfo = {}
     gotoneda = False
