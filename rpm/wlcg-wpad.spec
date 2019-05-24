@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.10
+Version: 1.11
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -55,6 +55,9 @@ fi
 
 
 %changelog
+* Fri May 24 2019 Dave Dykstra <dwd@fnal.gov> 1.11-1
+- Reorganize log messages for easier kibana monitor parsing.
+
 * Tue Nov  5 2018 Dave Dykstra <dwd@fnal.gov> 1.10-1
 - Add support for the OVERLOAD special proxy selection function and the
   overload excludes option.
