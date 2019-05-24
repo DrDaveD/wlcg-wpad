@@ -20,7 +20,7 @@ def error_request(start_response, response_code, response_body):
 
 def bad_request(start_response, host, ip, reason):
     response_body = 'Bad Request: ' + reason
-    logmsg(host, ip, 'bad request: ' + reason)
+    logmsg(host, ip, '', 'bad request: ' + reason)
     return error_request(start_response, '400 Bad Request', response_body)
 
 def good_request(start_response, response_body):
@@ -45,7 +45,7 @@ def parse_wlcgwpad_conf():
             # no change
             return wlcgwpadconf
         confmodtime = modtime
-        logmsg('-', '-', 'reading ' + wlcgwpadconffile)
+        logmsg('-', '-', '', 'reading ' + wlcgwpadconffile)
         for line in open(wlcgwpadconffile, 'r').read().split('\n'):
             line = line.split('#',1)[0]  # removes comments
             words = line.split(None,1)
@@ -95,7 +95,7 @@ def parse_wlcgwpad_conf():
                     idx += 1
             newconf[key][name] = values
     except Exception, e:
-        logmsg('-', '-', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
+        logmsg('-', '-', '', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
         confmodtime = 0
         return wlcgwpadconf
     return newconf
@@ -155,7 +155,7 @@ def dispatch(environ, start_response):
                 if len(hostproxies) == 1:
                     return bad_request(start_response, host, remoteip, str(msg))
                 del hostproxies[0]
-                logmsg(host, remoteip, 'WLCG proxy not found, falling back')
+                logmsg(host, remoteip, '', 'WLCG proxy not found, falling back')
             elif (hostproxies[0] == 'WLCG+BACKUP') and ('destshexps' in conf) \
                         and ('backupproxies' in conf):
                 backups = {}
@@ -169,7 +169,7 @@ def dispatch(environ, start_response):
                         return bad_request(start_response, host, remoteip, msg)
                     backups[backupalias] = proxies
                     backupdests.append(backupalias + '=' + ';'.join(proxies))
-                logmsg(host, remoteip, 'backup proxies are ' + ','.join(backupdests))
+                logmsg(host, remoteip, '', 'backup proxies are ' + ','.join(backupdests))
 
                 newproxydicts = []
                 matchedaliases = []
@@ -278,7 +278,7 @@ def dispatch(environ, start_response):
                     msg = 'Organization blocked for ' + \
                         str(remaining) + ' minutes (load ' + str(load) + '%),' \
                         + ' needs own proxies; directing to backups'
-                    logmsg(host, remoteip, org + ' overload ' + \
+                    logmsg(host, remoteip, org, 'overload, redirecting: ' + \
                         str(remaining) + ' more minutes, load ' + \
                         str(load) + '%, proxies are ' + ','.join(proxies))
 
@@ -300,7 +300,7 @@ def dispatch(environ, start_response):
             if proxies == [] and not gotoneda:
                 return bad_request(start_response, host, remoteip, msg)
             wpadinfo['proxies'].append({'default' : proxies})
-            logmsg(host, remoteip, 'sorted squids are ' + ','.join(predests + proxies))
+            logmsg(host, remoteip, '', 'sorted squids are ' + ','.join(predests + proxies))
     else:
         return bad_request(start_response, host, remoteip, 'Unrecognized host name')
 

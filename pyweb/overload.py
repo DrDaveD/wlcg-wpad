@@ -72,7 +72,7 @@ def orgload(remoteip, limit, minutes, persist, now):
                 delorgs += 1
         if delorgs > 0:
             orgdatalock.release()
-            logmsg('-', '-', 'cleaned load data from ' + str(delorgs) + ' orgs, ' + str(numorgs-delorgs) + ' still active')
+            logmsg('-', '-', '', 'cleaned load data from ' + str(delorgs) + ' orgs, ' + str(numorgs-delorgs) + ' still active')
             orgdatalock.acquire()
     # get the data for this org
     if org in orgdata:

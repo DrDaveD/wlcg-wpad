@@ -1,4 +1,7 @@
 # Find proxies for WLCG grid site
+#
+# Note: log messages that have a non-empty org (the third parameter to the
+#  logmsg function) are parsed for monitoring, up to a colon.
 
 import sys, os, copy, anyjson, netaddr, threading
 from wpad_utils import *
@@ -33,25 +36,25 @@ def updateorgs(host):
         handle.close()
         workerproxies = anyjson.deserialize(jsondata)
     except Exception, e:
-        logmsg(host, '-',  'error reading ' + workerproxiesfile + ', using old: ' + str(e))
+        logmsg(host, '-',  '', 'error reading ' + workerproxiesfile + ', using old: ' + str(e))
         orgsmodtime = 0
         return orgs
 
     neworgs = {}
     for squid in workerproxies:
         if 'ip' not in workerproxies[squid]:
-            logmsg(host, '-', 'no ip for ' + squid + ', skipping')
+            logmsg(host, '-', '', 'no ip found for ' + squid + ', skipping')
             continue
         org = getiporg(workerproxies[squid]['ip'])
         if org is None:
-            logmsg(host, '-', 'no org for ' + squid + ', skipping')
+            logmsg(host, '-', '', 'no org found for ' + squid + ', skipping')
             continue
         neworgs[org] = workerproxies[squid]
         if 'proxies' not in neworgs[org]:
             neworgs[org]['proxies'] = [{'default' : [ squid + ':3128' ]}]
             continue
 
-    logmsg('-', '-', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(neworgs)) + ' orgs')
+    logmsg('-', '-', '', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(neworgs)) + ' orgs')
 
     return neworgs
 
@@ -60,7 +63,7 @@ updatelock = threading.Lock()
 def get_proxies(host, remoteip, now):
     org = getiporg(remoteip)
     if org is None:
-        logmsg(host, remoteip, 'no org found for ip address')
+        logmsg(host, remoteip, 'Unknown', 'no org found')
         return {'msg': 'no org found for remote ip address'}
     global orgsupdatetime
     updatelock.acquire()
@@ -73,13 +76,13 @@ def get_proxies(host, remoteip, now):
         orgs = neworgs
     if org not in orgs:
         updatelock.release()
-        logmsg(host, remoteip, 'no squid found for org ' + org)
+        logmsg(host, remoteip, org, 'no squid found')
         return {'msg': 'no squid found matching the remote ip address'}
     wpadinfo = orgs[org]
     updatelock.release()
     wpadinfo = copy.deepcopy(wpadinfo)
     if 'disabled' in wpadinfo:
-        logmsg(host, remoteip, 'disabled: ' + wpadinfo['disabled'])
+        logmsg(host, remoteip, org, 'disabled: ' + wpadinfo['disabled'])
         wpadinfo['proxies'] = []
         wpadinfo['msg'] = wpadinfo['disabled']
         return wpadinfo
@@ -103,7 +106,7 @@ def get_proxies(host, remoteip, now):
             proxies = proxydict['default']
             break
         idx += 1
-    logmsg(host, remoteip, 'default squids for org "' + org + '" are ' + ';'.join(proxies))
+    logmsg(host, remoteip, org, 'default squids: ' + ';'.join(proxies))
     msg = ''
     if 'names' in wpadinfo:
         msg = 'For ' + ', '.join(wpadinfo['names'])

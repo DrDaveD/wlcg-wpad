@@ -1,5 +1,4 @@
 import os
 
-mypid = '[' + str(os.getpid()) + ']'
-def logmsg(host, ip, msg):
-    print host + mypid + ' ' + ip + ' ' + msg
+def logmsg(host, ip, org, msg):
+    print host + ' ' + ip + ' [' + org + '] ' + msg
