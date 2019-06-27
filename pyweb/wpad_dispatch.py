@@ -163,10 +163,10 @@ def dispatch(environ, start_response):
                 for backupalias in conf['backupproxies']:
                     if backupalias not in conf['destshexps']:
                         continue
-                    proxies, msg = geosort.sort_proxies(remoteip,
+                    proxies, gmsg = geosort.sort_proxies(remoteip,
                             conf['backupproxies'][backupalias])
                     if proxies == []:
-                        return bad_request(start_response, host, remoteip, msg)
+                        return bad_request(start_response, host, remoteip, gmsg)
                     backups[backupalias] = proxies
                     backupdests.append(backupalias + '=' + ';'.join(proxies))
                 logmsg(host, remoteip, '', 'backup proxies are ' + ','.join(backupdests))
@@ -270,10 +270,10 @@ def dispatch(environ, start_response):
                 org, remaining, load = orgload(remoteip, int(params[1]), \
                         int(params[2]), int(params[3]), now)
                 if remaining > 0:
-                    proxies, msg = geosort.sort_proxies(remoteip,
+                    proxies, gmsg = geosort.sort_proxies(remoteip,
                             conf['backupproxies'][params[0]])
                     if proxies == []:
-                        return bad_request(start_response, host, remoteip, msg)
+                        return bad_request(start_response, host, remoteip, gmsg)
                     wpadinfo['proxies'] = [{'default' : proxies}]
                     msg = 'Organization blocked for ' + \
                         str(remaining) + ' minutes (load ' + str(load) + '%),' \
@@ -295,10 +295,10 @@ def dispatch(environ, start_response):
                 wpadinfo['proxies'].append({aliasdests[0] : dests})
                 predests.append(hostproxies[0])
                 del hostproxies[0]
-            proxies, msg = geosort.sort_proxies(remoteip, hostproxies)
+            proxies, gmsg = geosort.sort_proxies(remoteip, hostproxies)
             # having no proxy is allowed if there is a destination_alias
             if proxies == [] and not gotoneda:
-                return bad_request(start_response, host, remoteip, msg)
+                return bad_request(start_response, host, remoteip, gmsg)
             wpadinfo['proxies'].append({'default' : proxies})
             logmsg(host, remoteip, '', 'sorted squids are ' + ','.join(predests + proxies))
     else:
