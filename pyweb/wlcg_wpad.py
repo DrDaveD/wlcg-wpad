@@ -10,11 +10,15 @@ import maxminddb
 orgscachesecs = 300  # 5 minutes
 
 workerproxiesfile = "/var/lib/wlcg-wpad/worker-proxies.json"
+shoalsquidsfile = "/var/lib/wlcg-wpad/shoal-squids.json"
 gireader = maxminddb.open_database("/var/lib/wlcg-wpad/geo/GeoIP2-ISP.mmdb")
 
 orgsupdatetime = 0
 orgsmodtime = 0
+shoalmodtime = 0
+workerorgs = {}
 orgs = {}
+shoalsquids = {}
 
 def getiporg(addr):
     org = None
@@ -24,37 +28,111 @@ def getiporg(addr):
     return org
 
 def updateorgs(host):
+    global workerorgs
+    global orgs
+    neworgs = {}
     try:
         global orgsmodtime
         modtime = os.stat(workerproxiesfile).st_mtime
         if modtime == orgsmodtime:
             # no change
-            return orgs
-        orgsmodtime = modtime
-        handle = open(workerproxiesfile, 'r')
-        jsondata = handle.read()
-        handle.close()
-        workerproxies = anyjson.deserialize(jsondata)
+            neworgs = workerorgs
+        else:
+            orgsmodtime = modtime
+            handle = open(workerproxiesfile, 'r')
+            jsondata = handle.read()
+            handle.close()
+            workerproxies = anyjson.deserialize(jsondata)
     except Exception, e:
         logmsg(host, '-',  '', 'error reading ' + workerproxiesfile + ', using old: ' + str(e))
         orgsmodtime = 0
-        return orgs
+        neworgs = workerorgs
 
-    neworgs = {}
-    for squid in workerproxies:
-        if 'ip' not in workerproxies[squid]:
-            logmsg(host, '-', '', 'no ip found for ' + squid + ', skipping')
+    global shoalsquids
+    try:
+        global shoalmodtime
+        modtime = os.stat(shoalsquidsfile).st_mtime
+        if modtime == shoalmodtime:
+            # no change
+            if neworgs == workerorgs:
+                return orgs
+        else:
+            shoalmodtime = modtime
+            handle = open(shoalsquidsfile, 'r')
+            jsondata = handle.read()
+            handle.close()
+            shoalsquids = anyjson.deserialize(jsondata)
+    except Exception, e:
+        logmsg(host, '-',  '', 'error reading ' + shoalsquidsfile + ', using old: ' + str(e))
+        shoalmodtime = 0
+        if neworgs == workerorgs:
+            return orgs
+
+    if neworgs == {}:
+        for squid in workerproxies:
+            if 'ip' not in workerproxies[squid]:
+                logmsg(host, '-', '', 'no ip found for ' + squid + ', skipping')
+                continue
+            org = getiporg(workerproxies[squid]['ip'])
+            if org is None:
+                logmsg(host, '-', '', 'no org found for ' + squid + ', skipping')
+                continue
+            neworgs[org] = workerproxies[squid]
+            if 'proxies' not in neworgs[org]:
+                neworgs[org]['proxies'] = [{'default' : [ squid + ':3128' ]}]
+                continue
+
+        workerorgs = neworgs
+
+        logmsg('-', '-', '', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(neworgs)) + ' orgs')
+
+    neworgs = copy.deepcopy(neworgs)
+    numshoalsquids = 0
+    numshoalorgs = 0
+    numshoalduporgsquids = 0
+    for squid in shoalsquids:
+        shoalsquid = shoalsquids[squid]
+        if 'public_ip' not in shoalsquid:
+            logmsg(host, '-', '', 'no public_ip found for shoal ' + squid + ', skipping')
             continue
-        org = getiporg(workerproxies[squid]['ip'])
+        ip = shoalsquid['public_ip']
+        org = getiporg(ip)
         if org is None:
-            logmsg(host, '-', '', 'no org found for ' + squid + ', skipping')
+            logmsg(host, '-', '', 'no org found for shoal ' + squid + ', skipping')
             continue
-        neworgs[org] = workerproxies[squid]
-        if 'proxies' not in neworgs[org]:
-            neworgs[org]['proxies'] = [{'default' : [ squid + ':3128' ]}]
+        if org not in neworgs:
+            neworgs[org] = {
+                "ips": {}, 
+                "names": [],
+                "proxies": [ { "default": [] } ],
+                "source": "shoal"
+            }
+            numshoalorgs += 1
+        neworg = neworgs[org]
+        if neworg["source"] != "shoal":
+            numshoalduporgsquids += 1
             continue
-
-    logmsg('-', '-', '', 'read ' + str(len(workerproxies)) + ' workerproxies and ' + str(len(neworgs)) + ' orgs')
+        name = ""
+        neworg["ips"][squid] = ip
+        if "city" in shoalsquid:
+            name = shoalsquid["city"]
+        if "country_code" in shoalsquid:
+            if name != "":
+                name += "."
+            name += shoalsquid["country_code"]
+        if name not in neworg["names"]:
+            neworg["names"].append(name)
+        proxies = neworg["proxies"][0]
+        if "private_ip" in shoalsquid:
+            ip = shoalsquid["private_ip"]
+        proxies["default"].append(ip + ":3128")
+        numshoalsquids += 1
+        if len(proxies["default"]) > 1:
+            proxies["loadbalance"] = "proxies"
+    if numshoalorgs > 0:
+        logmsg('-', '-', '', 'added ' + str(numshoalsquids) + ' shoal squids in ' + str(numshoalorgs) + ' orgs')
+    if numshoalduporgsquids > 0:
+        logmsg('-', '-', '', 'disregarded ' + str(numshoalduporgsquids) + ' shoal squids due to overlap of org with registered squid')
 
     return neworgs
 
