@@ -1,4 +1,4 @@
-*/20 * * * * root /usr/share/wlcg-wpad/sync_wpad_conf >/var/log/sync_wpad_conf.out 2>&1
+1-56/5 * * * * root /usr/share/wlcg-wpad/sync_wpad_conf >/var/log/sync_wpad_conf.out 2>&1
 
 # The day of the week (fifth column) has to match $CVMFS_UPDATEGEO_DAY
 #    in /usr/bin/cvmfs_server
