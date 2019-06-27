@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.11
+Version: 1.12
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -55,6 +55,11 @@ fi
 
 
 %changelog
+* Thu Jun 27 2019 Dave Dykstra <dwd@fnal.gov> 1.12-1
+- Add support for shoal-registered squids
+- Update squid info files every 5 minutes instead of every 20
+- Restore the beginning comment indicating the name of the site
+
 * Fri May 24 2019 Dave Dykstra <dwd@fnal.gov> 1.11-1
 - Reorganize log messages for easier kibana monitor parsing.
 
