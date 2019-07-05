@@ -144,13 +144,18 @@ def get_proxies(host, remoteip, now):
         logmsg(host, remoteip, 'Unknown', 'no org found')
         return {'msg': 'no org found for remote ip address'}
     global orgsupdatetime
+    global orgs
     updatelock.acquire()
     if orgsupdatetime < now - orgscachesecs:
         orgsupdatetime = now
-        updatelock.release()
-        neworgs = updateorgs(host)
-	updatelock.acquire()
-        global orgs
+        if len(orgs) > 0:
+            # release lock while reading to let other threads continue
+            #  to use old orgs
+            updatelock.release()
+            neworgs = updateorgs(host)
+            updatelock.acquire()
+        else:
+            neworgs = updateorgs(host)
         orgs = neworgs
     if org not in orgs:
         updatelock.release()

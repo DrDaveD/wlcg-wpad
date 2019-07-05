@@ -136,9 +136,14 @@ def dispatch(environ, start_response):
     conflock.acquire()
     if (now - confupdatetime) > confcachetime:
         confupdatetime = now
-        conflock.release()
-        newconf = parse_wlcgwpad_conf()
-        conflock.acquire()
+        if len(wlcgwpadconf) > 0:
+            # release lock while parsing to let other threads continue
+            #  to use old conf
+            conflock.release()
+            newconf = parse_wlcgwpad_conf()
+            conflock.acquire()
+        else:
+            newconf = parse_wlcgwpad_conf()
         wlcgwpadconf = newconf
     conf = wlcgwpadconf
     conflock.release()
