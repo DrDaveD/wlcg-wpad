@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.12
+Version: 1.13
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -31,6 +31,7 @@ mkdir -p $RPM_BUILD_ROOT/var/www/wsgi-scripts/wlcg-wpad
 install -p -m 555 misc/wlcg-wpad.wsgi $RPM_BUILD_ROOT/var/www/wsgi-scripts/wlcg-wpad
 mkdir -p $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 install -p -m 555 misc/sync_wpad_conf $RPM_BUILD_ROOT/usr/share/wlcg-wpad
+install -p -m 444 etc/wlcgwpad.conf $RPM_BUILD_ROOT/usr/share/wlcg-wpad/wlcgwpad.conf.template
 mkdir -p $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 install -p -m 444 pyweb/* $RPM_BUILD_ROOT/usr/share/wlcg-wpad/pyweb
 mkdir -p $RPM_BUILD_ROOT/var/lib/wlcg-wpad
@@ -55,6 +56,12 @@ fi
 
 
 %changelog
+* Thu Aug 29 2019 Dave Dykstra <dwd@fnal.gov> 1.13-1
+- Add support for /fsad.conf requests, for frontier-squid auto discovery
+  configuration
+- Make other threads wait while data is read for the first time
+- Add /usr/share/wlcg-wpad/wlcgwpad.conf.template for the documentation
+
 * Thu Jun 27 2019 Dave Dykstra <dwd@fnal.gov> 1.12-1
 - Add support for shoal-registered squids
 - Update squid info files every 5 minutes instead of every 20
