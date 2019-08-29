@@ -1,10 +1,11 @@
-# Dispatch a wpad.dat request
+# Dispatch a wpad.dat or fsad.conf request
 # If the URL ends with ?ip=ADDR then use ADDR instead of $REMOTE_ADDR
 
 import sys, urlparse, urllib, copy, time, threading
 from wlcg_wpad import get_proxies
 from overload import orgload
 from wpad_utils import *
+import fsad_conf
 import geosort
 
 confcachetime = 300  # 5 minutes
@@ -147,6 +148,9 @@ def dispatch(environ, start_response):
         wlcgwpadconf = newconf
     conf = wlcgwpadconf
     conflock.release()
+
+    if 'SCRIPT_NAME' in environ and environ['SCRIPT_NAME'] == '/fsad.conf':
+        return good_request(start_response, fsad_conf.getbody(remoteip, wlcgwpadconf))
 
     wpadinfo = {}
     gotoneda = False
