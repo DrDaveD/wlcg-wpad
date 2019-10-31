@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.13
+Version: 1.14
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,6 +56,9 @@ fi
 
 
 %changelog
+* Thu Oct 31 2019 Dave Dykstra <dwd@fnal.gov> 1.14-1
+- Avoid crashing when geoip org contains a non-ascii character
+
 * Thu Aug 29 2019 Dave Dykstra <dwd@fnal.gov> 1.13-1
 - Add support for /fsad.conf requests, for frontier-squid auto discovery
   configuration
