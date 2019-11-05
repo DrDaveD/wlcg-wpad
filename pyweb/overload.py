@@ -32,7 +32,8 @@ orgdata = {}
 # lock for adding, deleting, and looking up an org
 orgdatalock = threading.Lock()
 
-# return double of org name and percent of limit in the last minutes
+# return triple of org name, minutes remaining in an overload,
+#   and percent of limit in the last minutes being tracked
 def orgload(remoteip, limit, minutes, persist, now):
     global orgcleantime
     org = getiporg(remoteip)
