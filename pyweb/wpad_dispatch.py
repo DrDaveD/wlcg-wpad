@@ -293,6 +293,8 @@ def dispatch(environ, start_response):
 
         if 'proxies' not in wpadinfo:
             wpadinfo['proxies'] = []
+
+        if len(wpadinfo['proxies']) == 0 and len(hostproxies) > 0:
             predests = []
             while len(hostproxies) > 0 and "=" in hostproxies[0]:
                 # A destination_alias assigned to special proxies
