@@ -56,6 +56,10 @@ fi
 
 
 %changelog
+#- Improve response when a hostproxies ends in an OVERLOAD option and
+#    no WLCG squid is found to return bad request 'no squid found'
+#    instead of 'no proxy addr in database'
+
 * Thu Oct 31 2019 Dave Dykstra <dwd@fnal.gov> 1.14-1
 - Avoid crashing when geoip org contains a non-ascii character
 
