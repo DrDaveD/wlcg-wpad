@@ -6,6 +6,7 @@ from wlcg_wpad import get_proxies
 from overload import orgload
 from wpad_utils import *
 import fsad_conf
+import stashservers
 import geosort
 
 confcachetime = 300  # 5 minutes
@@ -125,11 +126,21 @@ def dispatch(environ, start_response):
         return bad_request(start_response, 'wpad-dispatch', '-', 'REMOTE_ADDR not set')
     host = environ['SERVER_NAME']
     remoteip = environ['REMOTE_ADDR']
+    parameters = {}
     if 'QUERY_STRING' in environ:
         parameters = urlparse.parse_qs(urllib.unquote(environ['QUERY_STRING']))
         if 'ip' in parameters:
             # for testing
             remoteip = parameters['ip'][0]
+
+    if 'SCRIPT_NAME' in environ and environ['SCRIPT_NAME'] == '/stashservers.dat':
+        try:
+            return good_request(start_response, 
+                                stashservers.getbody(remoteip, parameters))
+        except:
+            errormsg =  str(sys.exc_info()[1])
+            return bad_request(start_response, host, remoteip, errormsg)
+
     msg = None
     now = int(time.time())
     global wlcgwpadconf
