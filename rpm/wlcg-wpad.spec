@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.15
+Version: 1.16
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,6 +56,9 @@ fi
 
 
 %changelog
+* Wed Apr 22 2020 Dave Dykstra <dwd@fnal.gov> 1.16-1
+- Validate format of IP address given with ?ip=
+
 * Wed Apr 08 2020 Dave Dykstra <dwd@fnal.gov> 1.15-1
 - Add support for stashservers.dat
 - Improve response when a hostproxies ends in an OVERLOAD option and

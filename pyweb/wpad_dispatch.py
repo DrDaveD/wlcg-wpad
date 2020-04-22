@@ -8,6 +8,7 @@ from wpad_utils import *
 import fsad_conf
 import stashservers
 import geosort
+import socket
 
 confcachetime = 300  # 5 minutes
 
@@ -132,6 +133,11 @@ def dispatch(environ, start_response):
         if 'ip' in parameters:
             # for testing
             remoteip = parameters['ip'][0]
+            try:
+                socket.inet_aton(remoteip)
+            except:
+                return bad_request(start_response, 'wpad-dispatch', '-', 'bad ip address given')
+
 
     if 'SCRIPT_NAME' in environ and environ['SCRIPT_NAME'] == '/stashservers.dat':
         try:
