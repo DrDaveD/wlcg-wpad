@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.16
+Version: 1.17
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,6 +56,9 @@ fi
 
 
 %changelog
+* Fri May 01 2020 Dave Dykstra <dwd@fnal.gov> 1.17-1
+- Use matching ipranges even on disabled sites
+
 * Wed Apr 22 2020 Dave Dykstra <dwd@fnal.gov> 1.16-1
 - Validate format of IP address given with ?ip=
 
