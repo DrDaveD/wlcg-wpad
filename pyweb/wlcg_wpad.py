@@ -164,31 +164,40 @@ def get_proxies(host, remoteip, now):
     wpadinfo = orgs[org]
     updatelock.release()
     wpadinfo = copy.deepcopy(wpadinfo)
-    if 'disabled' in wpadinfo:
-        logmsg(host, remoteip, org, 'disabled: ' + wpadinfo['disabled'])
-        wpadinfo['proxies'] = []
-        wpadinfo['msg'] = wpadinfo['disabled']
-        return wpadinfo
     proxies = []
     remoteaddr = netaddr.IPAddress(remoteip)
+    iprangematched = False
     idx = 0
     while idx < len(wpadinfo['proxies']):
         proxydict = wpadinfo['proxies'][idx]
         if 'ipranges' in proxydict:
             # delete the entry if the remoteaddr doesn't match
             #  one of the ipranges
-            matchedone = False
             for iprange in proxydict['ipranges']:
                 if remoteaddr in netaddr.IPNetwork(iprange):
-                    matchedone = True
+                    iprangematched = True
+                    if 'names' in proxydict:
+                        wpadinfo['names'] = proxydict['names']
+                    elif 'names' in wpadinfo:
+                        del wpadinfo['names']
+                    if 'cmsnames' in proxydict:
+                        wpadinfo['cmsnames'] = proxydict['cmsnames']
+                    elif 'cmsnames' in wpadinfo:
+                        del wpadinfo['cmsnames']
                     break
-            if not matchedone:
+            if not iprangematched:
                 del wpadinfo['proxies'][idx]
                 continue
         if 'default' in proxydict:
             proxies = proxydict['default']
             break
         idx += 1
+    if 'disabled' in wpadinfo:
+        if not iprangematched:
+            logmsg(host, remoteip, org, 'disabled: ' + wpadinfo['disabled'])
+            wpadinfo['proxies'] = []
+            wpadinfo['msg'] = wpadinfo['disabled']
+            return wpadinfo
     logmsg(host, remoteip, org, 'default squids: ' + ';'.join(proxies))
     msg = ''
     if 'names' in wpadinfo:
