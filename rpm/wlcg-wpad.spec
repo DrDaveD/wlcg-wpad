@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.17
+Version: 1.18
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,6 +56,10 @@ fi
 
 
 %changelog
+* Wed May 13 2020 Dave Dykstra <dwd@fnal.gov> 1.18-1
+- Treat a found empty squid list the same as no match.  This is for
+  excluding ipranges from those served by squids.
+
 * Fri May 01 2020 Dave Dykstra <dwd@fnal.gov> 1.17-1
 - Use matching ipranges even on disabled sites
 
