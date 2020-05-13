@@ -190,6 +190,9 @@ def get_proxies(host, remoteip, now):
                 continue
         if 'default' in proxydict:
             proxies = proxydict['default']
+            if len(proxies) == 0:
+                logmsg(host, remoteip, org, 'no squid found')
+                return {'msg': 'no squid found matching the remote ip address'}
             break
         idx += 1
     if 'disabled' in wpadinfo:
