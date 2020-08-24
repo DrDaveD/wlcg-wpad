@@ -177,6 +177,8 @@ def dispatch(environ, start_response):
             wpadinfo = get_proxies(host, remoteip, now)
             if 'msg' in wpadinfo:
                 msg = wpadinfo['msg']
+            if 'proxies' in wpadinfo and len(wpadinfo['proxies']) == 0:
+                del wpadinfo['proxies']
             if 'proxies' not in wpadinfo:
                 if len(hostproxies) == 1:
                     return bad_request(start_response, host, remoteip, str(msg))
