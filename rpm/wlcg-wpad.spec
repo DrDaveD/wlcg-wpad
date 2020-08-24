@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.18
+Version: 1.19
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -10,7 +10,7 @@ Source0: https://frontier.cern.ch/dist/%{name}-%{version}.tar.gz
 
 Requires: httpd
 Requires: mod_wsgi
-Requires: cvmfs-server >= 2.5.1
+Requires: cvmfs-server >= 2.7.1
 Requires: python-anyjson
 Requires: python-netaddr
 
@@ -56,6 +56,9 @@ fi
 
 
 %changelog
+* Mon Aug 24 2020 Dave Dykstra <dwd@fnal.gov> 1.19-1
+- Fix bug that caused disabled sites to return a bad proxy list.
+
 * Wed May 13 2020 Dave Dykstra <dwd@fnal.gov> 1.18-1
 - Treat a found empty squid list the same as no match.  This is for
   excluding ipranges from those served by squids.
