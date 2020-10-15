@@ -3,7 +3,7 @@
 # Note: log messages that have a non-empty org (the third parameter to the
 #  logmsg function) are parsed for monitoring, up to a colon.
 
-import sys, os, copy, anyjson, netaddr, threading
+import sys, os, copy, anyjson, netaddr, threading, time, socket
 from wpad_utils import *
 import maxminddb
 
@@ -20,12 +20,57 @@ workerorgs = {}
 orgs = {}
 shoalsquids = {}
 
+# Parameters for organization cache
+organizations_cache = {}  # key is IP address and value is (timestamp, organization)
+organizations_cache_max_entries = 100000
+organizations_cache_secs = 60*60  # 1 hour
+organizations_lock = threading.Lock()
+
+
 def getiporg(addr):
-    org = None
-    gir = gireader.get(addr)
-    if gir is not None:
-        org = gir['organization']
-    return org
+
+    cached_value = organizations_cache.get(addr)
+    if cached_value:
+        (timestamp, organization) = cached_value
+        if time.time() <= timestamp + organizations_cache_secs:
+            logmsg('-', addr, organization, 'organization came from cache')
+            return organization
+        else:
+            # Pop expired entry from cache
+            organizations_cache.pop(addr, None)
+    elif len(organizations_cache) >= organizations_cache_max_entries:
+        # If cache is full, remove random entry
+        organizations_cache.popitem()
+
+    with organizations_lock:
+        # Recheck cache in case entry was added, while thread was waiting for a lock
+        cached_value = organizations_cache.get(addr)
+        if cached_value:
+            logmsg('-', addr, organization, 'organization came from cache')
+            return cached_value[1]
+
+        if netaddr.IPAddress(addr).version == 6:
+            try:
+                hostname = socket.gethostbyaddr(addr)[0]
+                ip = socket.gethostbyname(hostname)
+                message = 'IPv6 address to IPv4 address translation'
+            except:
+                # If IPv4 could not be found, use IPv6
+                ip = addr
+                message = 'IPv6 address'
+        else:
+            ip = addr
+            message = 'IPv4 address'
+
+        organization = None
+        gir = gireader.get(ip)
+        if gir is not None:
+            organization = gir['organization']
+        organizations_cache[addr] = (int(time.time()), organization)
+        logmsg('-', addr, organization, 'organization came from ' + message)
+
+    return organization
+
 
 def updateorgs(host):
     global workerorgs
@@ -70,10 +115,23 @@ def updateorgs(host):
 
     if neworgs == {}:
         for squid in workerproxies:
-            if 'ip' not in workerproxies[squid]:
-                logmsg(host, '-', '', 'no ip found for ' + squid + ', skipping')
+            if 'ips' not in workerproxies[squid]:
+                logmsg(host, '-', '', 'no ips found for ' + squid + ', skipping')
                 continue
-            org = getiporg(workerproxies[squid]['ip'])
+            if squid not in workerproxies[squid]['ips']:
+                logmsg(host, '-', '', 'no ' + squid + ' in ips found, skipping')
+                continue
+            ips = workerproxies[squid]['ips'][squid]
+            if not ips:
+                logmsg(host, '-', '', 'ips list is empty for ' + squid + ', skipping')
+                continue
+            for ip in ips:
+                if netaddr.IPAddress(ip).version == 4:
+                    addr = ip
+                    break
+            else:
+                addr = ips[0]
+            org = getiporg(addr)
             if org is None:
                 logmsg(host, '-', '', 'no org found for ' + squid + ', skipping')
                 continue
