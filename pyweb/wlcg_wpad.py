@@ -62,12 +62,25 @@ def getiporg(addr):
             ip = addr
             message = 'IPv4 address'
 
-        organization = None
-        gir = gireader.get(ip)
-        if gir is not None:
-            organization = gir['organization']
+        organization = get_organization(ip)
+        if ip != addr:
+            organization_IPv6 = get_organization(addr)
+            if organization == organization_IPv6:
+                message = message + '. IPv6 had the same organization as IPv4'
+            else:
+                message = messgae + '. IPv6 had ' + organization_IPV6 + ' organization'
         organizations_cache[addr] = (int(time.time()), organization)
         logmsg('-', addr, organization, 'organization came from ' + message)
+
+    return organization
+
+
+def get_organization(ip):
+
+    organization = None
+    gir = gireader.get(ip)
+    if gir is not None:
+        organization = gir['organization']
 
     return organization
 
