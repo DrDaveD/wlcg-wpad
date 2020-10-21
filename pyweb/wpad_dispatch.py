@@ -134,9 +134,12 @@ def dispatch(environ, start_response):
             # for testing
             remoteip = parameters['ip'][0]
             try:
-                socket.inet_aton(remoteip)
+                socket.inet_pton(socket.AF_INET, remoteip)
             except:
-                return bad_request(start_response, 'wpad-dispatch', '-', 'bad ip address given')
+                try:
+                    socket.inet_pton(socket.AF_INET6, remoteip)
+                except:
+                    return bad_request(start_response, 'wpad-dispatch', '-', 'bad ip address given')
 
 
     if 'SCRIPT_NAME' in environ and environ['SCRIPT_NAME'] == '/stashservers.dat':
