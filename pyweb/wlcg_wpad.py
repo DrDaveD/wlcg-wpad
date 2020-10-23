@@ -128,23 +128,10 @@ def updateorgs(host):
 
     if neworgs == {}:
         for squid in workerproxies:
-            if 'ips' not in workerproxies[squid]:
-                logmsg(host, '-', '', 'no ips found for ' + squid + ', skipping')
+            if 'ip' not in workerproxies[squid]:
+                logmsg(host, '-', '', 'no ip found for ' + squid + ', skipping')
                 continue
-            if squid not in workerproxies[squid]['ips']:
-                logmsg(host, '-', '', 'no ' + squid + ' in ips found, skipping')
-                continue
-            ips = workerproxies[squid]['ips'][squid]
-            if not ips:
-                logmsg(host, '-', '', 'ips list is empty for ' + squid + ', skipping')
-                continue
-            for ip in ips:
-                if netaddr.IPAddress(ip).version == 4:
-                    addr = ip
-                    break
-            else:
-                addr = ips[0]
-            org = getiporg(addr)
+            org = getiporg(workerproxies[squid]['ip'])
             if org is None:
                 logmsg(host, '-', '', 'no org found for ' + squid + ', skipping')
                 continue

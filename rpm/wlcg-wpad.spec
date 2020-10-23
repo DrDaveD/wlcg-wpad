@@ -59,7 +59,6 @@ fi
 * Thu Oct 15 2020 Edita Kizinevic <edita.kizinevic@cern.ch> 1.20-1
 - Add IPv6 support.
 - Add organizations cache.
-- Use 'ips' keyword in worker-proxies.json instead of 'ip'.
 
 * Mon Aug 24 2020 Dave Dykstra <dwd@fnal.gov> 1.19-1
 - Fix bug that caused disabled sites to return a bad proxy list.
