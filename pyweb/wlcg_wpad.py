@@ -46,8 +46,9 @@ def getiporg(addr):
         # Recheck cache in case entry was added, while thread was waiting for a lock
         cached_value = organizations_cache.get(addr)
         if cached_value:
+            (_, organization) = cached_value
             logmsg('-', addr, organization, 'organization came from cache')
-            return cached_value[1]
+            return organization
 
         if netaddr.IPAddress(addr).version == 6:
             try:

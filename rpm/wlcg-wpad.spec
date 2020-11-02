@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.21
+Version: 1.22
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,6 +56,9 @@ fi
 
 
 %changelog
+* Mon Nov 02 2020 Edita Kizinevic <edita.kizinevic@cern.ch> 1.22-1
+- Define undefined variable.
+
 * Fri Oct 23 2020 Edita Kizinevic <edita.kizinevic@cern.ch> 1.21-1
 - Undo changes of using 'ips' keyword in worker-proxies.json instead
   of 'ip'.
