@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.22
+Version: 1.23
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,6 +56,11 @@ fi
 
 
 %changelog
+* Fri Dec 08 2023 Edita Kizinevic <edita.kizinevic@cern.ch> 1.23-1
+- Always update the geodb every week instead of using lazy update,
+  causing it update only every 4 weeks.
+- Expose /cvmfs/info/v1/repositories.json to http.
+
 * Mon Nov 02 2020 Edita Kizinevic <edita.kizinevic@cern.ch> 1.22-1
 - Define undefined variable.
 
