@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.23
+Version: 1.24
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -56,7 +56,10 @@ fi
 
 
 %changelog
-* Fri Dec 08 2023 Edita Kizinevic <edita.kizinevic@cern.ch> 1.23-1
+* Mon Jan 02 2023 Dave Dykstra <dwd@fnal.gov> 1.24-1
+- Increase the max number of prefork apache processes from 256 to 1024.
+
+* Fri Dec 08 2023 Dave Dykstra <dwd@fnal.gov> 1.23-1
 - Always update the geodb every week instead of using lazy update,
   causing it update only every 4 weeks.
 - Expose /cvmfs/info/v1/repositories.json to http.
