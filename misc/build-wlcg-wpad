@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Run this script from the parent directory of wlcg-wpad
+
+if [ $# != 0 ]; then
+    echo "No parameters accepted" >&2
+    exit 1
+fi
+
+mkdir -p RPMBUILD/SOURCES RPMBUILD/SPECS
+# Create a .macros file
+topDir=$(pwd)/RPMBUILD
+rpmmacrosDir=`pwd`
+rpmmacros=${rpmmacrosDir}/.rpmmacros
+test -f "${rpmmacros}" && mv -f ${rpmmacros} ${rpmmacros}_
+touch ${rpmmacros}
+echo "%_topdir ${topDir}">> ${rpmmacros}
+# gpg rpm signing related:
+echo "%_signature gpg">> ${rpmmacros}
+echo "%_gpg_name  cernFrontier">> ${rpmmacros}
+echo "%_gpg_path ${HOME}/.gnupg">> ${rpmmacros}
+echo "%_gpgbin /usr/bin/gpg">> ${rpmmacros}
+export HOME=${rpmmacrosDir}
+
+PKG=wlcg-wpad
+STARTDIR=`pwd`
+pushd ${PKG}
+# git pull
+SPECPATH=$PWD/rpm/${PKG}.spec
+SPECFILE=${SPECPATH##*/}
+set -ex
+VERSION="`sed -n 's/^Version: //p' $SPECPATH`"
+popd
+pushd RPMBUILD/SOURCES
+ln -fns ${STARTDIR}/${PKG} ${PKG}-$VERSION
+rm -f ${PKG}-$VERSION.tar.gz
+tar chvf ${PKG}-$VERSION.tar.gz --exclude .git ${PKG}-$VERSION
+rm -f ${PKG}-$VERSION
+popd
+#pushd RPMBUILD/RPMS/noarch
+# clean out all but last 2 rpm builds
+#ls ${PKG}-1*|head -n -2|cut -d. -f5|while read TS; do
+#    rm -f ${PKG}-*.$TS.*git*
+#done
+#popd
+
+rm -fr RPMBUILD/BU* RPMBUILD/SRPMS
+pushd RPMBUILD/SPECS
+#NOW="`date +%Y%m%d%H%M%S`"
+#RELEASE="0.0.$NOW.$LOGNAME.${GITREV}git"
+rm -f $SPECFILE
+#sed "s/^Release.*%/Release: $RELEASE%/" $SPECPATH >$SPECFILE
+cp $SPECPATH $SPECFILE
+set +x
+rpmbuild -ba $SPECFILE
+rpmsign --addsign ../RPMS/noarch/*.rpm

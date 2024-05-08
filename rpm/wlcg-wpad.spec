@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.24
+Version: 1.25
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -11,7 +11,6 @@ Source0: https://frontier.cern.ch/dist/%{name}-%{version}.tar.gz
 Requires: httpd
 Requires: mod_wsgi
 Requires: cvmfs-server >= 2.7.1
-Requires: python-anyjson
 Requires: python-netaddr
 
 %description
@@ -56,7 +55,10 @@ fi
 
 
 %changelog
-* Mon Jan 02 2024 Dave Dykstra <dwd@fnal.gov> 1.24-1
+* Tue May 07 2024 Carl Vuosalo <cvuosalo@cern.ch> 1.25-1
+- Update for Python3 and EL9.
+
+* Tue Jan 02 2024 Dave Dykstra <dwd@fnal.gov> 1.24-1
 - Increase the max number of prefork apache processes from 256 to 1024.
 
 * Fri Dec 08 2023 Dave Dykstra <dwd@fnal.gov> 1.23-1

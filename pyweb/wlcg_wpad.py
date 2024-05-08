@@ -3,7 +3,7 @@
 # Note: log messages that have a non-empty org (the third parameter to the
 #  logmsg function) are parsed for monitoring, up to a colon.
 
-import sys, os, copy, anyjson, netaddr, threading, time, socket
+import sys, os, copy, json, netaddr, threading, time, socket
 from wpad_utils import *
 import maxminddb
 
@@ -101,8 +101,8 @@ def updateorgs(host):
             handle = open(workerproxiesfile, 'r')
             jsondata = handle.read()
             handle.close()
-            workerproxies = anyjson.deserialize(jsondata)
-    except Exception, e:
+            workerproxies = json.loads(jsondata)
+    except Exception as e:
         logmsg(host, '-',  '', 'error reading ' + workerproxiesfile + ', using old: ' + str(e))
         orgsmodtime = 0
         neworgs = workerorgs
@@ -120,8 +120,8 @@ def updateorgs(host):
             handle = open(shoalsquidsfile, 'r')
             jsondata = handle.read()
             handle.close()
-            shoalsquids = anyjson.deserialize(jsondata)
-    except Exception, e:
+            shoalsquids = json.loads(jsondata)
+    except Exception as e:
         logmsg(host, '-',  '', 'error reading ' + shoalsquidsfile + ', using old: ' + str(e))
         shoalmodtime = 0
         if neworgs == workerorgs:
