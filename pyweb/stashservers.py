@@ -1,7 +1,7 @@
 # return the order of selected stashserver list followed by
 # the contents of stashservers.list
 
-import urllib2
+import urllib.request, urllib.parse, urllib.error
 
 stashserversfile = '/var/lib/wlcg-wpad/stashservers.whitelist'
 
@@ -24,7 +24,7 @@ def getbody(remoteip, parameters):
         raise Exception("list name '" + listname + "' unknown")
 
     url = 'http://localhost/api/v1.0/geo/' + remoteip + '/' + servers
-    request = urllib2.Request(url)
-    order = urllib2.urlopen(request).read()
+    request = urllib.Request(url)
+    order = urllib.request.urlopen(request).read()
 
     return order + contents

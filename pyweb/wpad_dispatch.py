@@ -1,7 +1,7 @@
 # Dispatch a wpad.dat or fsad.conf request
 # If the URL ends with ?ip=ADDR then use ADDR instead of $REMOTE_ADDR
 
-import sys, urlparse, urllib, copy, time, threading
+import sys, urllib.request, urllib.parse, urllib.error, copy, time, threading
 from wlcg_wpad import get_proxies
 from overload import orgload
 from wpad_utils import *
@@ -32,7 +32,7 @@ def good_request(start_response, response_body):
                   [('Content-Type', 'text/plain'),
                    ('Cache-control', 'max-age=0'),
                    ('Content-Length', str(len(response_body)))])
-    return [response_body]
+    return [response_body.encode('utf-8')]
 
 wlcgwpadconf = {}
 confupdatetime = 0
@@ -68,7 +68,7 @@ def parse_wlcgwpad_conf():
                 continue
             if key == 'overload':
                 # allow org names to have commas in them by using url unquote
-                value = urllib.unquote(value)
+                value = urllib.parse.unquote(value)
                 values = value.split(',')
                 # keep these org names as a set instead of a list
                 if name not in newconf[key]:
@@ -97,7 +97,7 @@ def parse_wlcgwpad_conf():
                 else:
                     idx += 1
             newconf[key][name] = values
-    except Exception, e:
+    except Exception as e:
         logmsg('-', '-', '', 'error reading ' + wlcgwpadconffile + ', continuing: ' + str(e))
         confmodtime = 0
         return wlcgwpadconf
@@ -129,7 +129,7 @@ def dispatch(environ, start_response):
     remoteip = environ['REMOTE_ADDR']
     parameters = {}
     if 'QUERY_STRING' in environ:
-        parameters = urlparse.parse_qs(urllib.unquote(environ['QUERY_STRING']))
+        parameters = urllib.parse.parse_qs(urllib.parse.unquote(environ['QUERY_STRING']))
         if 'ip' in parameters:
             # for testing
             remoteip = parameters['ip'][0]
@@ -216,11 +216,11 @@ def dispatch(environ, start_response):
                         #  has already been processed
                         # print 'skipping because matched alias ' + alias
                         continue
-                    for backupalias in backups.keys():
+                    for backupalias in list(backups.keys()):
                         if backupalias not in backups:
                             # it has been deleted by previous iteration, skip
                             continue
-                        unibackupalias = backupalias.decode('utf-8')
+                        unibackupalias = backupalias
                         if unibackupalias in proxydict:
                             # this is an exact matching destalias, just add
                             #  backups and we're done with this alias
@@ -231,7 +231,7 @@ def dispatch(environ, start_response):
                             subs = conf['_destsubs'][backupalias]
                             gotone = False
                             for sub in subs:
-                                unisub = sub.decode('utf-8')
+                                unisub = sub
                                 if unisub in proxydict:
                                     gotone = True
                                     break
@@ -267,7 +267,7 @@ def dispatch(environ, start_response):
                                     proxydict['_backups'] = backups[match]
                                     del backups[match]
 
-                    if u'default' in proxydict:
+                    if 'default' in proxydict:
                         for backupalias in backups:
                             # first look to see if the name of this alias is
                             #   a superstring of another one
@@ -283,8 +283,8 @@ def dispatch(environ, start_response):
                                 #  other backupalias will cover it
                                 continue
                             newproxydict = copy.copy(proxydict)
-                            newproxydict[backupalias] = proxydict[u'default']
-                            del newproxydict[u'default']
+                            newproxydict[backupalias] = proxydict['default']
+                            del newproxydict['default']
                             newproxydict['_backups'] = backups[backupalias]
                             newproxydicts.append(newproxydict)
                             # print 'newproxydict: ' + str(newproxydict)
