@@ -9,9 +9,13 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Source0: https://frontier.cern.ch/dist/%{name}-%{version}.tar.gz
 
 Requires: httpd
+%if %{rhel} < 9
+Requires: python3-mod_wsgi
+%else
 Requires: mod_wsgi
+%endif
 Requires: cvmfs-server >= 2.7.1
-Requires: python-netaddr
+Requires: python3-netaddr
 
 %description
 Supplies Web Proxy Auto Discovery information for the Worldwide
@@ -55,8 +59,8 @@ fi
 
 
 %changelog
-* Tue May 07 2024 Carl Vuosalo <cvuosalo@cern.ch> 1.25-1
-- Update for Python3 and EL9.
+* Thu May 09 2024 Carl Vuosalo <cvuosalo@cern.ch> 1.25-1
+- Update for Python3, EL8, and EL9.
 
 * Tue Jan 02 2024 Dave Dykstra <dwd@fnal.gov> 1.24-1
 - Increase the max number of prefork apache processes from 256 to 1024.
