@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# Run in directory containing wlcg-wpad
+# This script assumes build-wlcg-wpad has been run in the current directory.
+# First argument must be target repo
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 {el8|el9|el8-debug|el9-debug}" >&2
+    exit 1
+fi
+REPO=$1
+
+PKG=wlcg-wpad
+set -ex
+VERSION="`sed -n 's/^Version: //p' RPMBUILD/SPECS/${PKG}.spec`"
+scp -P 2222 RPMBUILD/RPMS/noarch/${PKG}-$VERSION-*.noarch.rpm dbfrontier@frontier.cern.ch:dist/$REPO/RPMS/noarch/
+if [ -f RPMBUILD/SOURCES/${PKG}-$VERSION.tar.gz ]; then
+    scp -P 2222 RPMBUILD/SOURCES/${PKG}-$VERSION.tar.gz dbfrontier@frontier.cern.ch:dist
+fi
+ssh -t -p 2222 dbfrontier@frontier.cern.ch createrepo dist/$REPO
+cd ${PKG}
+git pull
+if ! git tag | grep -q $VERSION; then
+    git tag $VERSION
+    git push --tags
+fi
+rm -f RPMBUILD/SOURCES/${PKG}-$VERSION.tar.gz
