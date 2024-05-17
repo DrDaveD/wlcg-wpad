@@ -19,7 +19,7 @@ def error_request(start_response, response_code, response_body):
     start_response(response_code,
                    [('Cache-control', 'max-age=0'),
                     ('Content-Length', str(len(response_body)))])
-    return [response_body]
+    return [response_body.encode('utf-8')]
 
 def bad_request(start_response, host, ip, reason):
     response_body = 'Bad Request: ' + reason

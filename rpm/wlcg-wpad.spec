@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.25
+Version: 1.26
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -59,6 +59,9 @@ fi
 
 
 %changelog
+* Thu May 16 2024 Carl Vuosalo <cvuosalo@cern.ch> 1.26-1
+- Add one more "encode" for Python3 conversion.
+
 * Thu May 09 2024 Carl Vuosalo <cvuosalo@cern.ch> 1.25-1
 - Update for Python3, EL8, and EL9.
 
