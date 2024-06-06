@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.26
+Version: 1.27
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -59,6 +59,9 @@ fi
 
 
 %changelog
+* Thu Jun 06 2024 Dave Dyktrra <dwd@cern.ch> 1.27-1
+- Convert stashservers to also work with Python3.
+
 * Thu May 16 2024 Carl Vuosalo <cvuosalo@cern.ch> 1.26-1
 - Add one more "encode" for Python3 conversion.
 
