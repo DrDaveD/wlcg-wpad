@@ -8,8 +8,8 @@ stashserversfile = '/var/lib/wlcg-wpad/stashservers.whitelist'
 # exceptions are caught by caller
 
 def getbody(remoteip, parameters):
-    contents = open(stashserversfile, 'r').read()
-    lists = contents.split('\n')[3]
+    contents = open(stashserversfile, 'rb').read()
+    lists = contents.split(b'\n')[3].decode()
     lists = lists.split(';')
     listname = 'xroot'
     if 'list' in parameters:
@@ -24,7 +24,7 @@ def getbody(remoteip, parameters):
         raise Exception("list name '" + listname + "' unknown")
 
     url = 'http://localhost/api/v1.0/geo/' + remoteip + '/' + servers
-    request = urllib.Request(url)
+    request = urllib.request.Request(url)
     order = urllib.request.urlopen(request).read()
 
     return order + contents

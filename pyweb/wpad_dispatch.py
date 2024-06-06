@@ -32,6 +32,8 @@ def good_request(start_response, response_body):
                   [('Content-Type', 'text/plain'),
                    ('Cache-control', 'max-age=0'),
                    ('Content-Length', str(len(response_body)))])
+    if isinstance(response_body, bytes):
+        return [response_body]
     return [response_body.encode('utf-8')]
 
 wlcgwpadconf = {}
