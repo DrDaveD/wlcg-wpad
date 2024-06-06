@@ -53,4 +53,4 @@ rm -f $SPECFILE
 cp $SPECPATH $SPECFILE
 set +x
 rpmbuild -ba $SPECFILE
-rpmsign --addsign ../RPMS/noarch/*.rpm
+rpmsign --addsign ../RPMS/noarch/$PKG-$VERSION-*.rpm
