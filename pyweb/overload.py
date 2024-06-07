@@ -87,7 +87,7 @@ def orgload(remoteip, limit, minutes, persist, now):
     record = data.oldest
     while record != None and record.minute <= now - minutes:
         data.total -= record.requests
-        record = record.__next__
+        record = record.next
         data.oldest = record
     record = data.newest
     if record == None or record.minute != now:
