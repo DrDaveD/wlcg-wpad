@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.28
+Version: 1.29
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -59,6 +59,9 @@ fi
 
 
 %changelog
+* Fri Jun 07 2024 Dave Dyktrra <dwd@cern.ch> 1.29-1
+- Stop encoding log messages before printing.
+
 * Fri Jun 07 2024 Dave Dyktrra <dwd@cern.ch> 1.28-1
 - Revert a too-aggressive 2to3 change from 'next' to '__next__'.  It 
   resulted in an exception while a lock was held so it caused a deadlock.
