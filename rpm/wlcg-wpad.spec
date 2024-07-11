@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.30
+Version: 1.31
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -59,6 +59,10 @@ fi
 
 
 %changelog
+* Thu Jul 11 2024 Dave Dyktrra <dwd@cern.ch> 1.31-1
+- Switch to using 'isp' instead of 'organization' in maxmind DB because
+  it is more consistent between IPv4 and IPv6.
+
 * Thu Jul 11 2024 Dave Dyktrra <dwd@cern.ch> 1.30-1
 - Remove additional encoding in ipv6 log message.
 
