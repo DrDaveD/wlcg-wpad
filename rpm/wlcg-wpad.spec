@@ -1,6 +1,6 @@
 Summary: WLCG Web Proxy Auto Discovery
 Name: wlcg-wpad
-Version: 1.29
+Version: 1.30
 Release: 1%{?dist}
 BuildArch: noarch
 Group: Applications/System
@@ -59,6 +59,9 @@ fi
 
 
 %changelog
+* Thu Jul 11 2024 Dave Dyktrra <dwd@cern.ch> 1.30-1
+- Remove additional encoding in ipv6 log message.
+
 * Fri Jun 07 2024 Dave Dyktrra <dwd@cern.ch> 1.29-1
 - Stop encoding log messages before printing.
 

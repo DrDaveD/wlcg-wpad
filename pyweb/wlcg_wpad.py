@@ -69,7 +69,7 @@ def getiporg(addr):
             if organization == organization_IPv6:
                 message = message + '. IPv6 had the same organization as IPv4'
             else:
-                message = message + '. IPv6 had ' + str(organization_IPv6).encode('ISO-8859-1') + ' organization'
+                message = message + '. IPv6 had ' + str(organization_IPv6) + ' organization'
         organizations_cache[addr] = (int(time.time()), organization)
         logmsg('-', addr, organization, 'organization came from ' + message)
 
