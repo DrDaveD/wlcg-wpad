@@ -81,7 +81,13 @@ def get_organization(ip):
     organization = None
     gir = gireader.get(ip)
     if gir is not None:
-        organization = gir['organization']
+        # We used to use 'organization' but that causes mismatches
+        # between IPv4 and IPv6; in at least one case (Imperial College
+        # London) the IPv4 'organization' was more specific than the IPv6
+        # which matched 'isp' in both cases (Janet University Network).
+        # If this is to change back it has to change in make_worker_proxy.py
+        # at the same time.
+        organization = gir['isp']
 
     return organization
 
